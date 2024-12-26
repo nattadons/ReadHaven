@@ -1,7 +1,7 @@
 
 import { Box, Container, Typography, Button } from '@mui/material';
 import homeimage from '../assets/images/home.jpg';
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 
 const Home = () => {
   const [products, setProducts] = useState([]);
