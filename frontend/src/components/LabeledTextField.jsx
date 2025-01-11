@@ -1,4 +1,4 @@
-import React from 'react';
+import 'react';
 import { Box, TextField, Typography } from '@mui/material';
 
 // eslint-disable-next-line react/prop-types
