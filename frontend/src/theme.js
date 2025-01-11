@@ -8,7 +8,9 @@ const theme = createTheme({
     },
     text: {
       primary: '#000000', // Black text
+      secondary:'#837F7F' // gray text
     },
+    
   },
   typography: {
     fontFamily: 'inter, serif', // Set the global font family
@@ -24,6 +26,26 @@ const theme = createTheme({
         },
       },
     },
+
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            '& fieldset': {
+              borderColor: '#000000', // Set the border color for the text field
+            },
+            '&:hover fieldset': {
+              borderColor: '#000000', // Set the border color on hover
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#000000', // Set the border color when focused
+            },
+          },
+        },
+      },
+    },
+
+
   },
 
 

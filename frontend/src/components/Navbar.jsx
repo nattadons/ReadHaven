@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -7,35 +8,36 @@ import Typography from '@mui/material/Typography';
 import Menu from '@mui/material/Menu';
 import MenuIcon from '@mui/icons-material/Menu';
 import Container from '@mui/material/Container';
-
 import Button from '@mui/material/Button';
-
 import MenuItem from '@mui/material/MenuItem';
 import logo from '../assets/images/logo.svg';
 import BookIcon from '../assets/icons/bookicon.svg';
 
 const pages = ['Home', 'About', 'Books'];
 
-
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
-
+  const navigate = useNavigate();
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };
 
-
-  const handleCloseNavMenu = () => {
+  const handleCloseNavMenu = (page) => {
     setAnchorElNav(null);
+    console.log('Page:', page); // Log the value of page
+    if (page === 'Home') {
+      navigate('/');
+    } else if (page === 'About') {
+      navigate('/about');
+    } else if (page === 'Books') {
+      navigate('/books');
+    }
   };
 
   const handleLogin = () => {
-    // Add your login logic here
-    console.log('Login button clicked');
+    navigate('/login');
   };
-
-
 
   return (
     <AppBar position="static" color="primary">
@@ -44,7 +46,6 @@ function ResponsiveAppBar() {
           <Box sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }}>
             <img src={logo} alt="Logo" style={{ height: '40px' }} />
           </Box>
-
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
@@ -70,23 +71,33 @@ function ResponsiveAppBar() {
                 horizontal: 'left',
               }}
               open={Boolean(anchorElNav)}
-              onClose={handleCloseNavMenu}
+              onClose={() => handleCloseNavMenu(null)} // No arguments needed, can pass null directly
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography sx={{
-                    textAlign: 'center', color: 'text.primary', display: 'flex', alignItems: 'center', fontSize: {
-                      xs: '0.95rem', // small screens
-                      sm: '1rem',   // medium screens
-                      md: '1.1rem', // large screens
-                    },
-                  }}>
-                    {page === 'Books' && <img src={BookIcon} alt="Books Icon" style={{ marginRight: '10px', height: '24px' }} />}
-
-
-
-                    {page}</Typography>
+                <MenuItem key={page} onClick={() => handleCloseNavMenu(page)}> {/* Arrow function needed to pass page */}
+                  <Typography
+                    sx={{
+                      textAlign: 'center',
+                      color: 'text.primary',
+                      display: 'flex',
+                      alignItems: 'center',
+                      fontSize: {
+                        xs: '0.95rem', // small screens
+                        sm: '1rem', // medium screens
+                        md: '1.1rem', // large screens
+                      },
+                    }}
+                  >
+                    {page === 'Books' && (
+                      <img
+                        src={BookIcon}
+                        alt="Books Icon"
+                        style={{ marginRight: '10px', height: '24px' }}
+                      />
+                    )}
+                    {page}
+                  </Typography>
                 </MenuItem>
               ))}
             </Menu>
@@ -95,13 +106,12 @@ function ResponsiveAppBar() {
             <img src={logo} alt="Logo" style={{ height: '40px' }} />
           </Box>
 
-
           <Box sx={{ flexGrow: 1 }} />{/*push page to right-side or space-between  */}
           <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
               <Button
                 key={page}
-                onClick={handleCloseNavMenu}
+                onClick={() => handleCloseNavMenu(page)} // Arrow function needed to pass page
                 sx={{
                   my: 2,
                   display: 'flex',
@@ -114,18 +124,24 @@ function ResponsiveAppBar() {
                   mx: 1,
                   fontSize: {
                     xs: '0.95rem', // small screens
-                    sm: '1rem',   // medium screens
+                    sm: '1rem', // medium screens
                     md: '1.1rem', // large screens
                   },
                 }}
               >
-                {page === 'Books' && <img src={BookIcon} alt="Books Icon" style={{ marginRight: '10px', height: '24px' }} />}
+                {page === 'Books' && (
+                  <img
+                    src={BookIcon}
+                    alt="Books Icon"
+                    style={{ marginRight: '10px', height: '24px' }}
+                  />
+                )}
                 {page}
               </Button>
             ))}
           </Box>
           <Button
-            onClick={handleLogin}
+            onClick={handleLogin} // No arguments needed, can reference directly
             sx={{
               color: 'primary.main',
               backgroundColor: 'text.primary',
@@ -138,15 +154,13 @@ function ResponsiveAppBar() {
               mx: 1, // margin x-axis for spacing
               fontSize: {
                 xs: '0.95rem', // small screens
-                sm: '1rem',   // medium screens
+                sm: '1rem', // medium screens
                 md: '1.1rem', // large screens
               },
             }}
           >
             Login
           </Button>
-
-
         </Toolbar>
       </Container>
     </AppBar>

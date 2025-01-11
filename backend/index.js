@@ -1,27 +1,39 @@
-// filepath: /e:/BookHavenWeb/backend/index.js
 const express = require('express');
+const mongoose = require('mongoose');
 const cors = require('cors');
+
 const app = express();
-const PORT = process.env.PORT || 5000;
 
 // Middleware to parse JSON
+app.use(cors());
 app.use(express.json());
 
-// Enable CORS
-app.use(cors());
+const dbUrl = 'mongodb+srv://adminbookhaven:8976BookHaven@cluster0.netai.mongodb.net/sample_analytics?retryWrites=true&w=majority';
 
-// Mock data
-const products = [
-  { id: 1, name: 'Book 1', description: 'Description for Book 1', price: 10 },
-  { id: 2, name: 'Book 2', description: 'Description for Book 2', price: 15 },
-  { id: 3, name: 'Book 3', description: 'Description for Book 3', price: 20 },
-];
+// Connect to MongoDB
+mongoose.connect(dbUrl).then(()=> console.log('mongoose connected')).catch(err => console.log(err))
+  
 
-// Routes
-app.get('/api/products', (req, res) => {
-  res.json(products);
+// Start the server
+app.listen(8888, () => {
+  console.log('Server is running on port 8888');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+
+// Define a schema and model for the sample_analytics collection
+const customersSchema = mongoose.Schema({
+  name: String,
+  address: String,
+  email: String,
+  // Add other fields as needed
 });
+
+const Customers = mongoose.model('Customers', customersSchema);
+
+// Define a simple route to get customers data
+app.get('/', (req, res) => {
+  Customers.find()
+    .then(customers => res.json(customers))
+    .catch(err => console.log(err));
+});
+
