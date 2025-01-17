@@ -1,39 +1,25 @@
+require('dotenv').config(); // โหลดค่าใน .env
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const userRoutes = require('./routes/userRoutes'); // Import user routes
 
 const app = express();
 
-// Middleware to parse JSON
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-const dbUrl = 'mongodb+srv://adminbookhaven:8976BookHaven@cluster0.netai.mongodb.net/sample_analytics?retryWrites=true&w=majority';
+// เชื่อมต่อ MongoDB
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.log('MongoDB connection error:', err));
 
-// Connect to MongoDB
-mongoose.connect(dbUrl).then(()=> console.log('mongoose connected')).catch(err => console.log(err))
-  
+// Routes
+app.use('/users', userRoutes); // ใช้เส้นทาง /users สำหรับ user routes
 
-// Start the server
-app.listen(8888, () => {
-  console.log('Server is running on port 8888');
+// Start Server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
-
-
-// Define a schema and model for the sample_analytics collection
-const customersSchema = mongoose.Schema({
-  name: String,
-  address: String,
-  email: String,
-  // Add other fields as needed
-});
-
-const Customers = mongoose.model('Customers', customersSchema);
-
-// Define a simple route to get customers data
-app.get('/', (req, res) => {
-  Customers.find()
-    .then(customers => res.json(customers))
-    .catch(err => console.log(err));
-});
-

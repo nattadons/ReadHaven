@@ -1,17 +1,9 @@
 
 import { Box, Container, Typography, Button } from '@mui/material';
 import homeimage from '../assets/images/home.jpg';
-import  { useEffect, useState } from 'react';
+
 
 const Home = () => {
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    fetch('http://localhost:5000/api/products')
-      .then((response) => response.json())
-      .then((data) => setProducts(data))
-      .catch((error) => console.error('Error fetching products:', error));
-  }, []);
 
 
 
@@ -19,7 +11,7 @@ const Home = () => {
     <>
 
 
-      <Container className="home-content" >
+      <Container className="home-content" sx={{mb:'300px'}}>
         <Box className="left-content" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }} >
           <Typography
             variant="h3"
@@ -32,7 +24,7 @@ const Home = () => {
 
               },
               fontWeight: 'bold',
-              
+
             }}
           >
             Discover Your Next
@@ -50,7 +42,7 @@ const Home = () => {
 
               },
               fontWeight: 'bold',
-             
+
             }}
           >
             Adventure on Every Page
@@ -64,12 +56,12 @@ const Home = () => {
                 sm: '1.15rem',   // medium screens
                 md: '1.25rem', // large screens
               },
-            
+
             }}
           >
             Welcome to a world of books! Whether you are a fan of classic novels, academic knowledge, or thrilling adventures, we have the perfect read waiting for you. Dive into new experiences with every turn of the page.
           </Typography>
-          <Box sx={{   width: '100%' }}>
+          <Box sx={{ width: '100%' }}>
             <Button
               variant="contained"
               sx={{
@@ -85,18 +77,11 @@ const Home = () => {
         </Box>
         <Box className="right-content">
           <img src={homeimage} alt="Books" className="home-image" />
+
+
         </Box>
       </Container>
 
-      <ul>
-        {products.map((product) => (
-          <li key={product.id}>
-            <h2>{product.name}</h2>
-            <p>{product.description}</p>
-            <p>${product.price}</p>
-          </li>
-        ))}
-      </ul>
     </>
 
   );

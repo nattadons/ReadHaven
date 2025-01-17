@@ -1,4 +1,3 @@
-// filepath: /e:/BookHavenWeb/frontend/src/theme.js
 import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
@@ -10,11 +9,9 @@ const theme = createTheme({
       primary: '#000000', // Black text
       secondary:'#837F7F' // gray text
     },
-    
   },
   typography: {
     fontFamily: 'inter, serif', // Set the global font family
-
   },
   components: {
     MuiLink: {
@@ -26,29 +23,54 @@ const theme = createTheme({
         },
       },
     },
-
+    
+    // สำหรับการปรับแต่ง TextField ที่ใช้ OutlinedInput
     MuiTextField: {
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
             '& fieldset': {
-              borderColor: '#000000', // Set the border color for the text field
+              borderColor: '#000000', // สีกรอบปกติ
             },
             '&:hover fieldset': {
-              borderColor: '#000000', // Set the border color on hover
+              borderColor: '#000000', // สีกรอบเมื่อ hover
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#000000', // Set the border color when focused
+              borderColor: '#000000', // สีกรอบเมื่อ focus
             },
           },
         },
       },
     },
 
+    // สำหรับการปรับแต่ง OutlinedInput (กรณีใช้ FormControl)
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#000000', // สีกรอบปกติ
+          },
+          '&:hover .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#000000', // สีกรอบเมื่อ hover
+          },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+            borderColor: '#000000', // สีกรอบเมื่อ focus
+          },
+        },
+      },
+    },
 
+    // ปรับแต่งสีของ InputLabel
+    MuiInputLabel: {
+      styleOverrides: {
+        root: {
+          '&.Mui-focused': {
+            color: '#000000', // สีของ label เมื่อ focus
+          },
+        },
+      },
+    },
   },
-
-
 });
 
 export default theme;

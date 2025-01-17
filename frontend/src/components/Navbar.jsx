@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';  // นำเข้า useAuth จาก AuthContext
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -15,9 +16,17 @@ import BookIcon from '../assets/icons/bookicon.svg';
 
 const pages = ['Home', 'About', 'Books'];
 
-function ResponsiveAppBar() {
+function Navbar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const navigate = useNavigate();
+  const { isLoggedIn, logout } = useAuth();  // ดึงค่า isLoggedIn จาก AuthContext
+
+
+  // ใช้ useEffect เพื่อปริ้นค่า isLoggedIn ทุกครั้งที่มันเปลี่ยน
+  React.useEffect(() => {
+    console.log('isLoggedIn:', isLoggedIn);  // ปริ้นค่า isLoggedIn
+  }, [isLoggedIn]);  // useEffect จะทำงานทุกครั้งที่ isLoggedIn เปลี่ยนแปลง
+
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -25,7 +34,7 @@ function ResponsiveAppBar() {
 
   const handleCloseNavMenu = (page) => {
     setAnchorElNav(null);
-    console.log('Page:', page); // Log the value of page
+    console.log('Page:', page);
     if (page === 'Home') {
       navigate('/');
     } else if (page === 'About') {
@@ -37,6 +46,11 @@ function ResponsiveAppBar() {
 
   const handleLogin = () => {
     navigate('/login');
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   return (
@@ -71,11 +85,11 @@ function ResponsiveAppBar() {
                 horizontal: 'left',
               }}
               open={Boolean(anchorElNav)}
-              onClose={() => handleCloseNavMenu(null)} // No arguments needed, can pass null directly
+              onClose={() => handleCloseNavMenu(null)}
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={() => handleCloseNavMenu(page)}> {/* Arrow function needed to pass page */}
+                <MenuItem key={page} onClick={() => handleCloseNavMenu(page)}>
                   <Typography
                     sx={{
                       textAlign: 'center',
@@ -83,9 +97,9 @@ function ResponsiveAppBar() {
                       display: 'flex',
                       alignItems: 'center',
                       fontSize: {
-                        xs: '0.95rem', // small screens
-                        sm: '1rem', // medium screens
-                        md: '1.1rem', // large screens
+                        xs: '0.95rem',
+                        sm: '1rem',
+                        md: '1.1rem',
                       },
                     }}
                   >
@@ -102,30 +116,27 @@ function ResponsiveAppBar() {
               ))}
             </Menu>
           </Box>
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }}>
-            <img src={logo} alt="Logo" style={{ height: '40px' }} />
-          </Box>
 
-          <Box sx={{ flexGrow: 1 }} />{/*push page to right-side or space-between  */}
+          <Box sx={{ flexGrow: 1 }} />
           <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
             {pages.map((page) => (
               <Button
                 key={page}
-                onClick={() => handleCloseNavMenu(page)} // Arrow function needed to pass page
+                onClick={() => handleCloseNavMenu(page)}
                 sx={{
                   my: 2,
                   display: 'flex',
                   alignItems: 'center',
                   color: 'text.primary',
                   width: {
-                    xs: '20%', // 50% width on extra-small screens
-                    sm: '100px', // 200px width on small screens and above
+                    xs: '20%',
+                    sm: '100px',
                   },
                   mx: 1,
                   fontSize: {
-                    xs: '0.95rem', // small screens
-                    sm: '1rem', // medium screens
-                    md: '1.1rem', // large screens
+                    xs: '0.95rem',
+                    sm: '1rem',
+                    md: '1.1rem',
                   },
                 }}
               >
@@ -140,31 +151,55 @@ function ResponsiveAppBar() {
               </Button>
             ))}
           </Box>
-          <Button
-            onClick={handleLogin} // No arguments needed, can reference directly
-            sx={{
-              color: 'primary.main',
-              backgroundColor: 'text.primary',
-              display: 'flex',
-              alignItems: 'center',
-              width: {
-                xs: '20%', // 50% width on extra-small screens
-                sm: '160px', // 200px width on small screens and above
-              },
-              mx: 1, // margin x-axis for spacing
-              fontSize: {
-                xs: '0.95rem', // small screens
-                sm: '1rem', // medium screens
-                md: '1.1rem', // large screens
-              },
-            }}
-          >
-            Login
-          </Button>
+          {isLoggedIn ? (
+            <Button
+              onClick={handleLogout}
+              sx={{
+                color: 'primary.main',
+                backgroundColor: 'text.primary',
+                display: 'flex',
+                alignItems: 'center',
+                width: {
+                  xs: '20%',
+                  sm: '160px',
+                },
+                mx: 1,
+                fontSize: {
+                  xs: '0.95rem',
+                  sm: '1rem',
+                  md: '1.1rem',
+                },
+              }}
+            >
+              Logout
+            </Button>
+          ) : (
+            <Button
+              onClick={handleLogin}
+              sx={{
+                color: 'primary.main',
+                backgroundColor: 'text.primary',
+                display: 'flex',
+                alignItems: 'center',
+                width: {
+                  xs: '20%',
+                  sm: '160px',
+                },
+                mx: 1,
+                fontSize: {
+                  xs: '0.95rem',
+                  sm: '1rem',
+                  md: '1.1rem',
+                },
+              }}
+            >
+              Login
+            </Button>
+          )}
         </Toolbar>
       </Container>
     </AppBar>
   );
 }
 
-export default ResponsiveAppBar;
+export default Navbar;
