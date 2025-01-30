@@ -18,10 +18,9 @@ const Home = () => {
             gutterBottom
             sx={{
               fontSize: {
-                xs: '1.5rem', // small screens
-                sm: '2rem',   // medium screens
-                md: '2.5rem', // large screens
-
+                xs: '24px',
+                sm: '32px',
+                md: '40px',
               },
               fontWeight: 'bold',
 
@@ -35,11 +34,9 @@ const Home = () => {
             sx={{
               whiteSpace: 'nowrap',
               fontSize: {
-                xs: '1.5rem', // small screens
-                sm: '2rem',   // medium screens
-                md: '2.5rem', // large screens
-
-
+                xs: '24px',
+                sm: '32px',
+                md: '40px',
               },
               fontWeight: 'bold',
 
@@ -52,23 +49,28 @@ const Home = () => {
             gutterBottom
             sx={{
               fontSize: {
-                xs: '1rem', // small screens
-                sm: '1.15rem',   // medium screens
-                md: '1.25rem', // large screens
-              },
+                  xs: '14px',
+                  sm: '16px',
+                  md: '18px',
+                },
 
             }}
           >
             Welcome to a world of books! Whether you are a fan of classic novels, academic knowledge, or thrilling adventures, we have the perfect read waiting for you. Dive into new experiences with every turn of the page.
           </Typography>
           <Box sx={{ width: '100%' }}>
-            <Button
+            <Button size='medium'
               variant="contained"
               sx={{
                 color: 'primary.main',
                 backgroundColor: 'text.primary',
                 mt: 4,
                 width: '80%',
+                fontSize: {
+                  xs: '14px',
+                  sm: '16px',
+                  md: '18px',
+                },
               }}
             >
               Get Started!

@@ -40,7 +40,7 @@ function Navbar() {
     } else if (page === 'About') {
       navigate('/about');
     } else if (page === 'Books') {
-      navigate('/books');
+      navigate('/book');
     }
   };
 
@@ -97,9 +97,9 @@ function Navbar() {
                       display: 'flex',
                       alignItems: 'center',
                       fontSize: {
-                        xs: '0.95rem',
-                        sm: '1rem',
-                        md: '1.1rem',
+                        xs: '14px',
+                        sm: '16px',
+                        md: '18px',
                       },
                     }}
                   >
@@ -134,9 +134,9 @@ function Navbar() {
                   },
                   mx: 1,
                   fontSize: {
-                    xs: '0.95rem',
-                    sm: '1rem',
-                    md: '1.1rem',
+                    xs: '14px',
+                    sm: '16px',
+                    md: '18px',
                   },
                 }}
               >
@@ -152,7 +152,7 @@ function Navbar() {
             ))}
           </Box>
           {isLoggedIn ? (
-            <Button
+            <Button size='medium'
               onClick={handleLogout}
               sx={{
                 color: 'primary.main',
@@ -165,16 +165,16 @@ function Navbar() {
                 },
                 mx: 1,
                 fontSize: {
-                  xs: '0.95rem',
-                  sm: '1rem',
-                  md: '1.1rem',
+                  xs: '14px',
+                  sm: '16px',
+                  md: '18px',
                 },
               }}
             >
               Logout
             </Button>
           ) : (
-            <Button
+            <Button size='medium'
               onClick={handleLogin}
               sx={{
                 color: 'primary.main',
@@ -187,9 +187,9 @@ function Navbar() {
                 },
                 mx: 1,
                 fontSize: {
-                  xs: '0.95rem',
-                  sm: '1rem',
-                  md: '1.1rem',
+                  xs: '14px',
+                  sm: '16px',
+                  md: '18px',
                 },
               }}
             >

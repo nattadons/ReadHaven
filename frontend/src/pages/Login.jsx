@@ -1,8 +1,9 @@
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Container, Button, Typography, Grid, Link, IconButton, InputAdornment, FormControl, InputLabel, OutlinedInput, TextField } from '@mui/material';
-import { useNavigate} from 'react-router-dom';
-import GoogleLogo from '../assets/icons/google.png';
+import { useNavigate } from 'react-router-dom';
+
 import FacebookLogo from '../assets/icons/facebook.png';
+
 import axios from 'axios';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
@@ -10,26 +11,34 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '../context/AuthContext';
 
 
-const Login = ()  => {
-    
+import LoginComponent from '../components/GoogleLogin';
+
+const Login = () => {
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { login } = useAuth(); // ใช้ context
+    const { isLoggedIn, login } = useAuth();
+
+
+
 
     const navigate = useNavigate();
+    //login ด้วยระบบ
     useEffect(() => {
-        // ถ้า user มีการล็อกอินอยู่แล้ว ให้ redirect ไปที่หน้า Home หรือหน้าอื่น
-        if (login) {
-          navigate('/');  // เปลี่ยนเป็นหน้าที่ต้องการ เช่น Home
+        if (isLoggedIn) {
+            navigate('/book'); // เปลี่ยนไปหน้า book หรือหน้าอื่นที่เหมาะสม
+            console.log('isLoggedIn:', isLoggedIn);
         }
-      }, [login, navigate]);
+    }, [isLoggedIn, navigate]);
 
-    const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-    const handleMouseDownPassword = (event) => {
-        event.preventDefault();
-    };
+
+
+
+
+
+
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -40,18 +49,17 @@ const Login = ()  => {
         }
 
         try {
-            const response = await axios.post('http://localhost:3000/users/login', { email, password });
-
-            console.log(response.data.message);
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/users/login`, { email, password });
+            console.log(data)
+            login(data.token); // ใช้ token จาก API
             alert("Login successful!");
-            login(); // อัปเดตสถานะ login ผ่าน context
-            
-          
+            console.log('isLoggedIn:', isLoggedIn);
             navigate('/book');
         } catch (error) {
-            const errorMessage = error.response?.data?.message || error.message || 'Login failed!';
+            const errorMessage = error.response?.data?.message || 'Login failed!';
             console.error(errorMessage);
             alert(errorMessage);
+            console.log('isLoggedIn:', isLoggedIn);
         }
     };
 
@@ -60,7 +68,20 @@ const Login = ()  => {
     };
 
 
- 
+
+
+
+
+
+
+    const handleClickShowPassword = () => setShowPassword((show) => !show);
+
+    const handleMouseDownPassword = (event) => {
+        event.preventDefault();
+    };
+
+
+
 
     return (
         <Container maxWidth="sm">
@@ -68,7 +89,7 @@ const Login = ()  => {
                 <Typography component="h1" variant="h5" fontWeight={"bold"}>
                     Log in
                 </Typography>
-                <Box component="form" onSubmit={handleLogin} sx={{ mt: '32px', width: '100%' }}>
+                <Box component="form" sx={{ mt: '32px', width: '100%' }}>
                     <TextField
                         label="Email Address"
                         id="email"
@@ -79,7 +100,7 @@ const Login = ()  => {
                         required
                         sx={{ mt: '16px' }}
                     />
-                    
+
                     <FormControl fullWidth variant="outlined" sx={{ mt: '32px' }}>
                         <InputLabel htmlFor="password" color="text.primary">Password</InputLabel>
                         <OutlinedInput
@@ -105,7 +126,7 @@ const Login = ()  => {
                     </FormControl>
 
                     <Button
-                        type="submit"
+                        onClick={handleLogin}
                         fullWidth
                         variant="contained"
                         sx={{ mt: '32px', mb: 2, backgroundColor: 'text.primary', color: 'primary.main', height: '56px', fontSize: '16px' }}
@@ -142,12 +163,13 @@ const Login = ()  => {
                 </Typography>
                 <Grid container spacing={4} justifyContent="center">
                     <Grid item>
-                        <Button
-                            variant="outlined"
-                            sx={{ height: '52px', width: '52px', minWidth: '52px', color: 'text.primary', padding: 0 }}
-                        >
-                            <img src={GoogleLogo} alt="Google" style={{ height: '100%', width: '100%' }} />
-                        </Button>
+                        
+
+                        <LoginComponent>
+                        </LoginComponent>
+
+
+
                     </Grid>
                     <Grid item>
                         <Button

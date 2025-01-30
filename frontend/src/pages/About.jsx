@@ -11,6 +11,8 @@ const About = () => {
                 <Typography component="h1" variant="h5" fontWeight="bold" fontSize={"32px"}>
                     About Us
                 </Typography>
+                <Box sx={{ display: 'flex', flexDirection: 'column'}}>
+
                 <Typography
                     component="p"
                     sx={{
@@ -39,6 +41,9 @@ const About = () => {
                 >
                     we’re a community for readers seeking inspiration, learning, and connection.&quot;
                 </Typography>
+
+                </Box>
+               
                 <Grid container spacing={4} sx={{ mt: 8, width: '100%', justifyContent: 'center' }}>
                     <Grid item xs={12} sm={4}>
                         <Box
