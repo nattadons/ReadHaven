@@ -28,7 +28,7 @@ const Login = () => {
     useEffect(() => {
         if (isLoggedIn) {
             navigate('/book'); // เปลี่ยนไปหน้า book หรือหน้าอื่นที่เหมาะสม
-            console.log('isLoggedIn:', isLoggedIn);
+            
         }
     }, [isLoggedIn, navigate]);
 
@@ -53,13 +53,13 @@ const Login = () => {
             console.log(data)
             login(data.token); // ใช้ token จาก API
             alert("Login successful!");
-            console.log('isLoggedIn:', isLoggedIn);
+      
             navigate('/book');
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Login failed!';
             console.error(errorMessage);
             alert(errorMessage);
-            console.log('isLoggedIn:', isLoggedIn);
+           
         }
     };
 

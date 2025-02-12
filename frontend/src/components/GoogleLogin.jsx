@@ -8,9 +8,9 @@ import { Button } from '@mui/material';
 
 
 
-const LoginComponent = () => {
-  const [userInfo, setUserInfo] = useState(null);
-  const { isLoggedIn, login } = useAuth();
+const Googlelogin = () => {
+  const [, setUserInfo] = useState();
+  const { login } = useAuth();
 
   // ใช้ useEffect เพื่อโหลด Google API client เมื่อ component ถูก mount
   useEffect(() => {
@@ -49,14 +49,14 @@ const LoginComponent = () => {
     authInstance.signIn().then(() => {
       const user = authInstance.currentUser.get();// ดึง token
       const idToken = user.getAuthResponse().id_token; // ดึง token
-      console.log('ID Token in frontend:', idToken);// ดึง token
+     
 
 
       const userData = getUserInfo();
       console.log(userData)// ดึงข้อมูลผู้ใช้
       setUserInfo(userData); // เก็บข้อมูลผู้ใช้ใน state
       // ส่งข้อมูลผู้ใช้ไปที่ server ด้วย axios
-      axios.post(`${import.meta.env.VITE_API_URL}/users/googl`, userData, {
+      axios.post(`${import.meta.env.VITE_API_URL}/users/google`, userData, {
         headers: {
           Authorization: `Bearer ${idToken}`, // ส่ง token ในรูปแบบ Bearer
         },
@@ -64,7 +64,7 @@ const LoginComponent = () => {
         .then((response) => {
 
           console.log('User data sent successfully:', response.data);
-          console.log('Token Login:', response.data.token);
+         
           login(response.data.token);  // ส่ง token และข้อมูลผู้ใช้ไปที่ login ใน AuthContext
 
         })
@@ -90,4 +90,4 @@ const LoginComponent = () => {
   );
 };
 
-export default LoginComponent;
+export default Googlelogin;

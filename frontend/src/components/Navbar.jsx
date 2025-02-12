@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';  // นำเข้า useAuth จาก AuthContext
+import { useAuth } from '../context/AuthContext';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -19,14 +19,7 @@ const pages = ['Home', 'About', 'Books'];
 function Navbar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const navigate = useNavigate();
-  const { isLoggedIn, logout } = useAuth();  // ดึงค่า isLoggedIn จาก AuthContext
-
-
-  // ใช้ useEffect เพื่อปริ้นค่า isLoggedIn ทุกครั้งที่มันเปลี่ยน
-  React.useEffect(() => {
-    console.log('isLoggedIn:', isLoggedIn);  // ปริ้นค่า isLoggedIn
-  }, [isLoggedIn]);  // useEffect จะทำงานทุกครั้งที่ isLoggedIn เปลี่ยนแปลง
-
+  const { isLoggedIn, logout } = useAuth();
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -34,13 +27,14 @@ function Navbar() {
 
   const handleCloseNavMenu = (page) => {
     setAnchorElNav(null);
-    console.log('Page:', page);
     if (page === 'Home') {
       navigate('/');
     } else if (page === 'About') {
       navigate('/about');
     } else if (page === 'Books') {
       navigate('/book');
+    } else if (page === 'My Account') {
+      navigate('/myaccount');
     }
   };
 
@@ -51,16 +45,50 @@ function Navbar() {
   const handleLogout = () => {
     logout();
     navigate('/');
+    handleCloseNavMenu();
+  };
+
+  const handleMyAccount = () => {
+    navigate('/myaccount');
+  };
+
+  const buttonStyles = {
+    my: 2,
+    display: 'flex',
+    alignItems: 'center',
+    color: 'text.primary',
+    width: {
+      xs: '20%',
+      sm: '100px',
+    },
+    mx: { xs: 1, sm: 1, md: 1 },
+    fontSize: {
+      xs: '14px',
+      sm: '16px',
+      md: '18px',
+    },
+  };
+
+  // สร้างรายการเมนูตามสถานะการล็อกอิน
+  const getMobileMenuItems = () => {
+    const menuItems = [...pages];
+    if (isLoggedIn) {
+      menuItems.push('My Account');
+      menuItems.push('Logout');
+    }
+    return menuItems;
   };
 
   return (
     <AppBar position="static" color="primary">
       <Container maxWidth={false}>
         <Toolbar disableGutters>
+          {/* Logo */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }}>
             <img src={logo} alt="Logo" style={{ height: '40px' }} />
           </Box>
 
+          {/* Mobile Menu */}
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
             <IconButton
               size="large"
@@ -88,8 +116,11 @@ function Navbar() {
               onClose={() => handleCloseNavMenu(null)}
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
-              {pages.map((page) => (
-                <MenuItem key={page} onClick={() => handleCloseNavMenu(page)}>
+              {getMobileMenuItems().map((item) => (
+                <MenuItem 
+                  key={item} 
+                  onClick={() => item === 'Logout' ? handleLogout() : handleCloseNavMenu(item)}
+                >
                   <Typography
                     sx={{
                       textAlign: 'center',
@@ -101,44 +132,52 @@ function Navbar() {
                         sm: '16px',
                         md: '18px',
                       },
+                      px: { xs: 2, sm: 3, md: 4 },
                     }}
                   >
-                    {page === 'Books' && (
+                    {item === 'Books' && (
                       <img
                         src={BookIcon}
                         alt="Books Icon"
                         style={{ marginRight: '10px', height: '24px' }}
                       />
                     )}
-                    {page}
+                    {item}
                   </Typography>
                 </MenuItem>
               ))}
+              {!isLoggedIn && (
+                <MenuItem onClick={handleLogin}>
+                  <Typography
+                    sx={{
+                      textAlign: 'center',
+                      color: 'text.primary',
+                      display: 'flex',
+                      alignItems: 'center',
+                      fontSize: {
+                        xs: '14px',
+                        sm: '16px',
+                        md: '18px',
+                      },
+                      px: { xs: 2, sm: 3, md: 4 },
+                    }}
+                  >
+                    Login
+                  </Typography>
+                </MenuItem>
+              )}
             </Menu>
           </Box>
 
           <Box sx={{ flexGrow: 1 }} />
-          <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+          
+          {/* Desktop Menu */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
             {pages.map((page) => (
               <Button
                 key={page}
                 onClick={() => handleCloseNavMenu(page)}
-                sx={{
-                  my: 2,
-                  display: 'flex',
-                  alignItems: 'center',
-                  color: 'text.primary',
-                  width: {
-                    xs: '20%',
-                    sm: '100px',
-                  },
-                  mx: 1,
-                  fontSize: {
-                    xs: '14px',
-                    sm: '16px',
-                    md: '18px',
-                  },
-                }}
+                sx={buttonStyles}
               >
                 {page === 'Books' && (
                   <img
@@ -150,52 +189,75 @@ function Navbar() {
                 {page}
               </Button>
             ))}
+            
+            {/* Account/Login Section */}
+            {isLoggedIn ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', ml: { xs: 2, sm: 3, md: 4 } }}>
+                <Button
+                  onClick={handleMyAccount}
+                  sx={{
+                    color: 'text.primary',
+                    fontSize: {
+                      xs: '14px',
+                      sm: '16px',
+                      md: '18px',
+                    },
+                  }}
+                >
+                  My Account
+                </Button>
+                <Typography
+                  sx={{
+                    color: 'text.primary',
+                    mx: 1,
+                    fontSize: {
+                      xs: '14px',
+                      sm: '16px',
+                      md: '18px',
+                    },
+                  }}
+                >
+                  |
+                </Typography>
+                <Button
+                  onClick={handleLogout}
+                  sx={{
+                    color: 'text.primary',
+                    fontSize: {
+                      xs: '14px',
+                      sm: '16px',
+                      md: '18px',
+                    },
+                  }}
+                >
+                  Logout
+                </Button>
+              </Box>
+            ) : (
+              <Button
+                size='medium'
+                onClick={handleLogin}
+                sx={{
+                  color: 'primary.main',
+                  backgroundColor: 'text.primary',
+                  display: 'flex',
+                  alignItems: 'center',
+                  width: {
+                    xs: '20%',
+                    sm: '160px',
+                  },
+                  mx: { xs: 2, sm: 3, md: 4 },
+                  fontSize: {
+                    xs: '14px',
+                    sm: '16px',
+                    md: '18px',
+                  },
+                }}
+              >
+                Login
+              </Button>
+            )}
           </Box>
-          {isLoggedIn ? (
-            <Button size='medium'
-              onClick={handleLogout}
-              sx={{
-                color: 'primary.main',
-                backgroundColor: 'text.primary',
-                display: 'flex',
-                alignItems: 'center',
-                width: {
-                  xs: '20%',
-                  sm: '160px',
-                },
-                mx: 1,
-                fontSize: {
-                  xs: '14px',
-                  sm: '16px',
-                  md: '18px',
-                },
-              }}
-            >
-              Logout
-            </Button>
-          ) : (
-            <Button size='medium'
-              onClick={handleLogin}
-              sx={{
-                color: 'primary.main',
-                backgroundColor: 'text.primary',
-                display: 'flex',
-                alignItems: 'center',
-                width: {
-                  xs: '20%',
-                  sm: '160px',
-                },
-                mx: 1,
-                fontSize: {
-                  xs: '14px',
-                  sm: '16px',
-                  md: '18px',
-                },
-              }}
-            >
-              Login
-            </Button>
-          )}
         </Toolbar>
       </Container>
     </AppBar>

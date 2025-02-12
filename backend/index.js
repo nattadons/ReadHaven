@@ -14,9 +14,18 @@ const app = express();
 // Middleware
 
 app.use(cors({
-  origin: 'http://localhost:5173',  // อนุญาตเฉพาะ frontend นี้
+  origin: ['http://localhost:5173', 'http://localhost:3000'], // อนุญาตเฉพาะ frontend นี้
   credentials: true  // อนุญาตให้ส่ง cookies หรือ Authorization headers
 }));
+
+
+// ✅ Set Cross-Origin-Opener-Policy
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  next();
+});
+
+
 
 app.use(express.json());
 
@@ -24,6 +33,10 @@ app.use(express.json());
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('MongoDB connected successfully'))
   .catch(err => console.log('MongoDB connection error:', err));
+
+
+
+
 
 // Routes
 app.use('/users', userRoutes); // ใช้เส้นทาง /users สำหรับ user routes
@@ -34,3 +47,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+
+

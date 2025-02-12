@@ -100,8 +100,6 @@ exports.loginWithGoogle = async (req, res) => {
       return res.status(400).json({ message: 'ID token is required' });
     }
 
-    console.log('ID Token in backend site:', id_token);
-
     // ตรวจสอบ id_token กับ Google
     const ticket = await client.verifyIdToken({
       idToken: id_token,
@@ -115,7 +113,6 @@ exports.loginWithGoogle = async (req, res) => {
 
     // ตรวจสอบว่าผู้ใช้อยู่ในระบบหรือไม่
     let user = await Users.findOne({ email });
-    
 
     if (!user) {
       // สร้างผู้ใช้ใหม่หากยังไม่มีในระบบ
@@ -126,33 +123,17 @@ exports.loginWithGoogle = async (req, res) => {
         imageUrl,
       });
 
-      const savedUser = await user.save();
-      return res.status(201).json({
-        message: 'User created successfully!',
-        user: {
-          id: savedUser._id,
-          name: savedUser.name,
-          email: savedUser.email,
-          imageUrl: savedUser.imageUrl,
-        },
-      });
+      await user.save(); // บันทึกผู้ใช้ใหม่ลงฐานข้อมูล
     }
 
-    // หากมีผู้ใช้ในระบบแล้ว, สร้าง JWT Token
-    const JWT_SECRET = process.env.JWT_SECRET;
+    // สร้าง JWT Token ทุกครั้งที่ล็อกอิน
     const token = jwt.sign(
       { userId: user._id, email: user.email },
-      JWT_SECRET,
+      process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
-    if (user){
-      console.log('token login Backend:', token);
-      
-    }
-    else{
-      console.log('User not found:', token);
-    }
-    
+
+    console.log('Token generated:', token);
 
     res.status(200).json({
       message: 'Login successful!',
@@ -162,12 +143,37 @@ exports.loginWithGoogle = async (req, res) => {
         name: user.name,
         email: user.email,
         imageUrl: user.imageUrl,
-        
       },
     });
-   
+
   } catch (err) {
     console.error('Error during loginWithGoogle:', err.message);
     res.status(500).json({ error: err.message });
   }
 };
+
+// Add this to userController.js
+exports.updateUser = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const updates = req.body;
+    
+    // Find user and update
+    const user = await Users.findByIdAndUpdate(
+      userId,
+      updates,
+      { new: true } // Return the updated document
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
