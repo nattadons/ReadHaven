@@ -51,7 +51,7 @@ const Login = () => {
         try {
             const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/users/login`, { email, password });
             console.log(data)
-            login(data.token); // ใช้ token จาก API
+            login(data.token,data.user.id); // ใช้ token จาก API
             alert("Login successful!");
       
             navigate('/book');

@@ -11,15 +11,19 @@ export const AuthProvider = ({ children }) => {
         setIsLoggedIn(loggedInStatus);  // ตรวจสอบแค่ isLoggedIn
     }, []);  // ดึงข้อมูลเพียงครั้งเดียวเมื่อ Component ถูกโหลด
 
-    const login = (token) => {
+    const login = (token,userId) => {
         localStorage.setItem('isLoggedIn', 'true');
         localStorage.setItem('authToken', token); // บันทึก token
+        localStorage.setItem('userId', userId);
         setIsLoggedIn(true);
     };
 
     const logout = () => {
         localStorage.removeItem('isLoggedIn');
+        sessionStorage.removeItem('checkoutData');
+        localStorage.removeItem('userId');
         localStorage.removeItem('authToken'); // ลบ token
+
         setIsLoggedIn(false);
     };
 

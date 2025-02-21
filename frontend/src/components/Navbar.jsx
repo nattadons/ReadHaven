@@ -13,6 +13,7 @@ import Button from '@mui/material/Button';
 import MenuItem from '@mui/material/MenuItem';
 import logo from '../assets/images/logo.svg';
 import BookIcon from '../assets/icons/bookicon.svg';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 const pages = ['Home', 'About', 'Books'];
 
@@ -35,6 +36,9 @@ function Navbar() {
       navigate('/book');
     } else if (page === 'My Account') {
       navigate('/myaccount');
+    }
+    else if (page === 'Cart') {
+      navigate('/cart');
     }
   };
 
@@ -75,6 +79,7 @@ function Navbar() {
     if (isLoggedIn) {
       menuItems.push('My Account');
       menuItems.push('Logout');
+      menuItems.push('Cart');
     }
     return menuItems;
   };
@@ -117,8 +122,8 @@ function Navbar() {
               sx={{ display: { xs: 'block', md: 'none' } }}
             >
               {getMobileMenuItems().map((item) => (
-                <MenuItem 
-                  key={item} 
+                <MenuItem
+                  key={item}
                   onClick={() => item === 'Logout' ? handleLogout() : handleCloseNavMenu(item)}
                 >
                   <Typography
@@ -170,7 +175,7 @@ function Navbar() {
           </Box>
 
           <Box sx={{ flexGrow: 1 }} />
-          
+
           {/* Desktop Menu */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center' }}>
             {pages.map((page) => (
@@ -189,10 +194,25 @@ function Navbar() {
                 {page}
               </Button>
             ))}
-            
+
             {/* Account/Login Section */}
             {isLoggedIn ? (
               <Box sx={{ display: 'flex', alignItems: 'center', ml: { xs: 2, sm: 3, md: 4 } }}>
+                <Button
+                  onClick={() => navigate('/cart')}
+                  sx={{
+                    mr: 2,
+                    color: 'text.primary',
+                    fontSize: {
+                      xs: '14px',
+                      sm: '16px',
+                      md: '18px',
+                    },
+                  }}
+                >
+                  <ShoppingCartIcon sx={{ mr: 1 }} />
+                  Cart
+                </Button>
                 <Button
                   onClick={handleMyAccount}
                   sx={{

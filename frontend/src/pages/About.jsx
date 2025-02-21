@@ -11,39 +11,42 @@ const About = () => {
                 <Typography component="h1" variant="h5" fontWeight="bold" fontSize={"32px"}>
                     About Us
                 </Typography>
-                <Box sx={{ display: 'flex', flexDirection: 'column'}}>
 
-                <Typography
-                    component="p"
-                    sx={{
-                        mt: 2,
-                        width: '100%',
-                        fontSize: "20px",
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        textAlign: 'center', // Center the text
-                    }}
-                >
-                    &quot;At ReadHaven, we believe stories and knowledge can transform lives. More than a bookstore,
-                </Typography>
-                <Typography
-                    component="p"
-                    sx={{
+                <Box>
 
-                        width: '100%',
-                        fontSize: "20px",
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        textAlign: 'center', // Center the text
-                    }}
-                >
-                    we’re a community for readers seeking inspiration, learning, and connection.&quot;
-                </Typography>
+                    <Typography
+                        component="p"
+                        sx={{
+                            mt: 2,
+                            width: '100%',
+                            fontSize: "20px",
+                            textAlign: 'center',
+                           
+                        }}
+                    >
+                        &quot;At ReadHaven, we believe stories and knowledge can transform lives. More than a bookstore,
+                    </Typography>
+                    <Typography
+                        component="p"
+                        sx={{
+
+                            width: '100%',
+                            fontSize: "20px",
+                            textAlign: 'center',
+                           
+                        }}
+                    >
+                        we’re a community for readers seeking inspiration, learning, and connection.&quot;
+                    </Typography>
+
+
+
 
                 </Box>
-               
+
+
+
+
                 <Grid container spacing={4} sx={{ mt: 8, width: '100%', justifyContent: 'center' }}>
                     <Grid item xs={12} sm={4}>
                         <Box

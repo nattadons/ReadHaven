@@ -1,10 +1,14 @@
 
 import { Box, Container, Typography, Button } from '@mui/material';
 import homeimage from '../assets/images/home.jpg';
+import { useNavigate } from 'react-router-dom';
 
 
 const Home = () => {
-
+  const navigate = useNavigate();
+  const Test = () => {
+    navigate('/testimage');
+};
 
 
   return (
@@ -58,7 +62,7 @@ const Home = () => {
           >
             Welcome to a world of books! Whether you are a fan of classic novels, academic knowledge, or thrilling adventures, we have the perfect read waiting for you. Dive into new experiences with every turn of the page.
           </Typography>
-          <Box sx={{ width: '100%' }}>
+          <Box sx={{ width: '100%' }} >
             <Button size='medium'
               variant="contained"
               sx={{
@@ -72,6 +76,7 @@ const Home = () => {
                   md: '18px',
                 },
               }}
+              onClick={Test}
             >
               Get Started!
             </Button>

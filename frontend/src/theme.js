@@ -118,7 +118,28 @@ const theme = createTheme({
         root: {
           fontSize: '16px', // ขนาดฟอนต์ของตัวเลขใน Pagination
           color: '#2B2B2B', // สีฟอนต์
-          
+
+        },
+      },
+    },
+    MuiRadio: {
+      styleOverrides: {
+        root: {
+          '&.Mui-checked': {
+            color: 'black',
+          },
+        },
+      },
+    },
+    // เพิ่มในส่วน components ของ theme
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderColor: '#2B2B2B', // สีขอบดำ
+          '&:hover': {
+            borderColor: '#2B2B2B', // สีขอบเมื่อ hover
+          },
+          borderRadius: 0, 
         },
       },
     },

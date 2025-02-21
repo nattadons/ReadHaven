@@ -44,12 +44,14 @@ exports.createUser = async (req, res) => {
       email,
       phone_number,
       password: hashedPassword,
+      
     });
 
     const savedUser = await newUser.save();
     res.status(201).json({ message: 'User created successfully!', user: savedUser });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: err.message , message: 'Signup ERROR'} );
+
   }
 };
 
@@ -175,5 +177,18 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-
+// Add to userController.js
+exports.checkAdminRole = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const user = await Users.findById(userId);
+    
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied. Admin only.' });
+    }
+    next();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 

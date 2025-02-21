@@ -65,7 +65,8 @@ const Googlelogin = () => {
 
           console.log('User data sent successfully:', response.data);
          
-          login(response.data.token);  // ส่ง token และข้อมูลผู้ใช้ไปที่ login ใน AuthContext
+          login(response.data.token,response.data.user.id);  // ส่ง token และข้อมูลผู้ใช้ไปที่ login ใน AuthContext
+        
 
         })
         .catch((error) => {

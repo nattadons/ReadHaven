@@ -5,17 +5,18 @@ import {
     Box,
     Typography,
     TextField,
-    IconButton,
+  
     Paper,
     Button,
     Snackbar,
     Alert
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
+
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import LeafMapApi from '../components/LeafMapApi';
+import MyAccountAdmin from './MyAccountAdmin';
 
 const MyAccount = () => {
     const [user, setUser] = useState({
@@ -43,25 +44,28 @@ const MyAccount = () => {
         fetchUserData();
     }, []);
 
-    const fetchUserData = () => {
-        axios
-            .get(`${import.meta.env.VITE_API_URL}/users/`, {
+    const fetchUserData = async () => {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
-            })
-            .then((response) => {
-                setUser(prevUser => ({
-                    ...prevUser,
-                    ...response.data
-                }));
-                setEditedUser(response.data);
-            })
-            .catch((error) => {
-                console.error('Error fetching data:', error);
-                showSnackbar('Error fetching user data', 'error');
             });
+            setUser(prevUser => ({
+                ...prevUser,
+                ...response.data
+            }));
+            setEditedUser(response.data);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            showSnackbar('Error fetching user data', 'error');
+        }
     };
+    
+    console.log('image is',user.imageUrl);
+    if (user?.role === 'admin') {
+        return <MyAccountAdmin />;
+      }
     
 
     const handleEdit = () => {
@@ -175,16 +179,17 @@ const MyAccount = () => {
             >
                 <Box sx={{ position: 'relative' }}>
                     {!isEditing ? (
-                        <IconButton
+                        <Button
                             onClick={handleEdit}
                             sx={{
                                 position: 'absolute',
                                 right: 0,
-                                top: 0
+                                top: 0,
+                                backgroundColor: 'text.primary',
                             }}
                         >
-                            <EditIcon />
-                        </IconButton>
+                            Add information
+                        </Button>
                     ) : (
                         <Box sx={{ position: 'absolute', right: 0, top: 0, display: 'flex', gap: 1 }}>
                             <Button
@@ -208,10 +213,13 @@ const MyAccount = () => {
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         {/* Profile Image */}
+                       
+                        
                         <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
                             {user.imageUrl ? (
                                 <img
                                     src={user.imageUrl}
+                                    referrerPolicy="no-referrer" //สำคัญเอาเเก้บัค ภาพ
                                     
                                     alt={"../assets/images/profile_backup.jpg"}
                                     onError={(e) => (e.target.src = '../assets/images/profile_backup.jpg')}

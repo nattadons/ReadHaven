@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
     Container,
     Grid,
@@ -8,33 +8,94 @@ import {
     Button,
     Card,
     CardMedia,
-    CircularProgress // เพิ่ม loading indicator
+    CircularProgress,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from '@mui/material';
 import axios from 'axios';
 import Recommended from '../components/Recommended';
 
+
 const BookDetail = () => {
     const { id } = useParams();
     const [book, setBook] = useState(null);
-    
-    const [loading, setLoading] = useState(true); // เพิ่ม loading state
+    const [loading, setLoading] = useState(true);
+    const [openLoginDialog, setOpenLoginDialog] = useState(false);
+    const navigate = useNavigate();
+
+    // สมมติว่าเราเก็บสถานะการ login ไว้ใน localStorage
+    const isLoggedIn = () => {
+        return localStorage.getItem('authToken') !== null;
+    };
 
     useEffect(() => {
         setLoading(true);
-        // เปลี่ยน URL เป็นแบบ relative path
         axios.get(`${import.meta.env.VITE_API_URL}/products/products/${id}`)
-
             .then((response) => {
                 setBook(response.data);
                 console.log('Book Product:', response.data);
                 setLoading(false);
             })
-
             .catch((error) => {
                 console.error('Error fetching book:', error);
                 setLoading(false);
             });
     }, [id]);
+
+    const handleAction = (action) => {
+        if (!isLoggedIn()) {
+            setOpenLoginDialog(true);
+            return;
+        }
+        const userId = localStorage.getItem('userId'); // หรือดึงจาก token ที่ decode แล้ว
+        if (!userId) {
+            navigate('/login');
+            return;
+        }
+        
+        if (action === 'purchase') {
+
+
+            const checkoutData = {
+                items: [{
+                    id: book.id,
+                    name: book.name,
+                    price: book.price,
+                    quantity: 1,
+                    image_product: book.image_product
+                }],
+                totalAmount: book.price,
+                timestamp: new Date().getTime()
+            };
+            
+            sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
+            navigate('/payment');
+            
+        } else if (action === 'cart') {
+            // เพิ่มสินค้าลงใน cart
+            const cartItem = {
+                id: book.id,
+                name: book.name,
+                price: book.price,
+                quantity: 1,
+                image_product: book.image_product,
+                description: book.detail
+            };
+
+           
+            const currentCart = JSON.parse(localStorage.getItem(`cartItems_${userId}`)) || [];
+            currentCart.push(cartItem);
+            localStorage.setItem(`cartItems_${userId}`, JSON.stringify(currentCart));
+            
+            navigate('/cart');
+        }
+    };
+    const handleLoginRedirect = () => {
+        setOpenLoginDialog(false);
+        navigate('/login');
+    };
 
     if (loading) {
         return (
@@ -53,25 +114,17 @@ const BookDetail = () => {
     }
 
     return (
-
-
-
-
         <Container maxWidth="lg">
-            <Box
-                sx={{
-                    mt: '100px',
-                    mb: '300px',
-                    mx: '50px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'start',
-                    maxWidth: '100%',
-                }}
-            >
-
+            <Box sx={{
+                mt: '100px',
+                mb: '300px',
+                mx: '50px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'start',
+                maxWidth: '100%',
+            }}>
                 <Grid container spacing={4}>
-                    {/* รูปหนังสือ */}
                     <Grid item xs={12} md={6}>
                         <Card sx={{ maxWidth: 400, maxHeight: 400 }}>
                             <CardMedia
@@ -83,7 +136,6 @@ const BookDetail = () => {
                         </Card>
                     </Grid>
 
-                    {/* รายละเอียดหนังสือ */}
                     <Grid item xs={12} md={6}>
                         <Typography variant="h4" component="h1" gutterBottom fontSize={"24px"}>
                             {book.name}
@@ -95,76 +147,93 @@ const BookDetail = () => {
                             {book.detail}
                         </Typography>
 
-
-
-                        {/* ใช้ Grid กับ spacing เพื่อจัดระยะห่างระหว่างปุ่ม */}
                         <Grid container justifyContent="space-between" sx={{ mt: '80px' }}>
                             <Grid item>
-                                <Button variant="contained" size="large" sx={{
-                                    backgroundColor: 'text.primary', color: 'primary.main', fontSize: {
-                                        xs: '14px',
-                                        sm: '16px',
-                                        md: '18px',
-                                    },
-                                }} >
+                                <Button 
+                                    variant="contained" 
+                                    size="large" 
+                                    onClick={() => handleAction('purchase')}
+                                    sx={{
+                                        backgroundColor: 'text.primary',
+                                        color: 'primary.main',
+                                        fontSize: {
+                                            xs: '14px',
+                                            sm: '16px',
+                                            md: '18px',
+                                        },
+                                    }}
+                                >
                                     ฿{book.price?.toFixed(2)}
                                 </Button>
                             </Grid>
                             <Grid item>
-                                <Button variant="contained" size="large" sx={{
-                                    backgroundColor: 'text.primary', color: 'primary.main', fontSize: {
-                                        xs: '14px',
-                                        sm: '16px',
-                                        md: '18px',
-                                    },
-                                }}>
+                                <Button 
+                                    variant="contained" 
+                                    size="large"
+                                    onClick={() => handleAction('cart')}
+                                    sx={{
+                                        backgroundColor: 'text.primary',
+                                        color: 'primary.main',
+                                        fontSize: {
+                                            xs: '14px',
+                                            sm: '16px',
+                                            md: '18px',
+                                        },
+                                    }}
+                                >
                                     ADD TO CART
                                 </Button>
                             </Grid>
                         </Grid>
-
-
-
-
-
                     </Grid>
                 </Grid>
 
-                {/* Overview section */}
                 <Box sx={{
                     mt: 8,
-                    padding: '16px 70px',// เพิ่มระยะห่างภายในกรอบ
+                    padding: '16px 70px',
                     border: '1px solid',
-                    borderColor: 'text.primary',  // เลือกสีของกรอบที่ต้องการ
-                   
-                   
-                             // สามารถเพิ่มเงาให้กรอบได้
+                    borderColor: 'text.primary',
                 }}>
                     <Typography variant="h5" gutterBottom>
                         Overview
                     </Typography>
                     <Typography variant="body1" paragraph>
-                    &quot;{book.overview}&quot;
+                        &quot;{book.overview}&quot;
                     </Typography>
                 </Box>
-                
-                {/* ส่วน Recommended */}
-                <Recommended ></Recommended>
 
+                <Recommended />
+
+                {/* Login Dialog */}
+                <Dialog
+                    open={openLoginDialog}
+                    onClose={() => setOpenLoginDialog(false)}
+                    PaperProps={{
+                        sx: {
+                            borderRadius: '16px',
+                            width: '100%',
+                            maxWidth: '400px',
+                            p: 2,
+                            textAlign: 'center',
+                        }
+                    }}
+                >
+                    <DialogTitle>Please Login First</DialogTitle>
+                    <DialogContent>
+                        <Typography>
+                            You need to be logged in to perform this action.
+                        </Typography>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button variant="outlined" color='text.primary' onClick={() => setOpenLoginDialog(false)}    >Cancel</Button>
+                        <Button onClick={handleLoginRedirect} variant="contained"  sx={{  backgroundColor: 'text.primary',
+                                        color: 'primary.main'}}>
+                            Go to Login
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
         </Container>
-
-
-
-
-
-
-
-
-
-
-
-
     );
 };
 

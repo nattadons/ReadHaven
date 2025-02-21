@@ -3,7 +3,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const userRoutes = require('./routes/userRoutes'); // Import user routes
-const productRoutes = require('./routes/productRoute');// Import product routes
+const productRoutes = require('./routes/productRoutes');// Import product routes
+const orderRoutes = require('./routes/orderRoutes');// Import order routes
 const JWT_SECRET = process.env.JWT_SECRET;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 
@@ -41,6 +42,7 @@ mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopol
 // Routes
 app.use('/users', userRoutes); // ใช้เส้นทาง /users สำหรับ user routes
 app.use('/products', productRoutes);
+app.use('/orders', orderRoutes);
 
 // Start Server
 const PORT = process.env.PORT || 3000;

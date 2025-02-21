@@ -37,3 +37,36 @@ exports.getRecommendedProducts = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+exports.addProduct = async (req, res) => {
+  try {
+    const { name, author, price, detail } = req.body;
+    const imageUrl = req.file ? req.file.path : null;
+
+    const newProduct = new Products({
+      name,
+      author,
+      price,
+      detail,
+      imageUrl
+    });
+
+    const savedProduct = await newProduct.save();
+    res.status(201).json(savedProduct);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await Products.findByIdAndDelete(req.params.id);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    res.status(200).json({ message: 'Product deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
