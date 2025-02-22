@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 const Payment = () => {
     const navigate = useNavigate();
@@ -26,60 +27,58 @@ const Payment = () => {
     const [userData, setUserData] = useState(null);
     const [checkoutData, setCheckoutData] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('promptpay');
+    const { isLoggedIn,token } = useAuth();
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const token = localStorage.getItem('authToken');
-
-                if (!token) {
-                    navigate('/login');
-                    return;
-                }
-
-                // ดึงข้อมูลผู้ใช้
-                const userResponse = await axios.get(
-                    `${import.meta.env.VITE_API_URL}/users/`,
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`
+                
+                // รอให้ token พร้อมก่อน
+                if (token && isLoggedIn) {
+                    // ดึงข้อมูลผู้ใช้
+                    const userResponse = await axios.get(
+                        `${import.meta.env.VITE_API_URL}/users/`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
                         }
+                    );
+                    setUserData(userResponse.data);
+
+                    // ดึงข้อมูล checkout
+                    let orderData = location.state;
+                    if (!orderData) {
+                        const savedData = sessionStorage.getItem('checkoutData');
+                        if (!savedData) {
+                            throw new Error('No checkout data found');
+                        }
+                        orderData = JSON.parse(savedData);
                     }
-                );
-                setUserData(userResponse.data);
 
-                // ดึงข้อมูลจาก Router State ก่อน
-                let orderData = location.state;
-
-                // ถ้าไม่มีใน Router State ให้ดึงจาก sessionStorage
-                if (!orderData) {
-                    const savedData = sessionStorage.getItem('checkoutData');
-                    if (!savedData) {
-                        throw new Error('No checkout data found');
+                    // ตรวจสอบความเก่าของข้อมูล
+                    const isDataExpired = (orderData.timestamp + 3600000) < new Date().getTime();
+                    if (isDataExpired) {
+                        throw new Error('Checkout session expired');
                     }
-                    orderData = JSON.parse(savedData);
+
+                    setCheckoutData(orderData);
                 }
-
-                // ตรวจสอบความเก่าของข้อมูล (เกิน 1 ชั่วโมง)
-                const isDataExpired = (orderData.timestamp + 3600000) < new Date().getTime();
-                if (isDataExpired) {
-                    throw new Error('Checkout session expired');
-                }
-
-                setCheckoutData(orderData);
-
             } catch (err) {
                 console.error('Error:', err);
                 setError(err.message || 'มีข้อผิดพลาดในการดึงข้อมูล');
-                navigate('/cart');
+                // จะ redirect ไป cart เมื่อเกิด error เท่านั้น
+                if (err.message !== 'No checkout data found') {
+                    navigate('/cart');
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [navigate, location.state]);
+    }, [token, navigate, location.state]);
 
     const handlePaymentChange = (event) => {
         setPaymentMethod(event.target.value);
@@ -87,7 +86,7 @@ const Payment = () => {
 
     const handleCheckout = async () => {
         try {
-            const token = localStorage.getItem('token');
+           
             if (!token) {
                 navigate('/login');
                 return;
@@ -137,6 +136,14 @@ const Payment = () => {
     };
 
     if (loading) {
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+     // ถ้ายังไม่มี token ให้แสดง loading
+     if (!token) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <CircularProgress />

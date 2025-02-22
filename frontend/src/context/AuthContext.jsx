@@ -5,30 +5,45 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userId, setUserId] = useState(null);
+    const [token, setToken] = useState(null);
 
+    // 🔹 ดึงค่าจาก localStorage เมื่อ component โหลด
     useEffect(() => {
         const loggedInStatus = localStorage.getItem('isLoggedIn') === 'true';
-        setIsLoggedIn(loggedInStatus);  // ตรวจสอบแค่ isLoggedIn
-    }, []);  // ดึงข้อมูลเพียงครั้งเดียวเมื่อ Component ถูกโหลด
+        const storedUserId = localStorage.getItem('userId');
+        const storedToken = localStorage.getItem('authToken');
 
-    const login = (token,userId) => {
-        localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('authToken', token); // บันทึก token
-        localStorage.setItem('userId', userId);
+        if (storedToken) {
+            setToken(storedToken);
+            setIsLoggedIn(loggedInStatus);
+            setUserId(storedUserId);
+        }
+    }, []);
+
+    // 🔹 อัปเดต localStorage ทุกครั้งที่ state เปลี่ยน
+    useEffect(() => {
+        localStorage.setItem('isLoggedIn', isLoggedIn);
+        localStorage.setItem('userId', userId || '');
+        localStorage.setItem('authToken', token || '');
+    }, [isLoggedIn, userId, token]); // อัปเดตทุกครั้งที่ค่าเปลี่ยน
+
+    // 🔹 ฟังก์ชันล็อกอิน
+    const login = (token, userId) => {
+        setUserId(userId);
         setIsLoggedIn(true);
+        setToken(token);
     };
 
+    // 🔹 ฟังก์ชันล็อกเอาต์
     const logout = () => {
-        localStorage.removeItem('isLoggedIn');
-        sessionStorage.removeItem('checkoutData');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('authToken'); // ลบ token
-
+        setUserId(null);
         setIsLoggedIn(false);
+        setToken(null);
     };
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
+        <AuthContext.Provider value={{ isLoggedIn, userId, token, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

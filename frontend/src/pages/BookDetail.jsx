@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import Recommended from '../components/Recommended';
+import { useAuth } from '../context/AuthContext'; 
 
 
 const BookDetail = () => {
@@ -24,11 +25,9 @@ const BookDetail = () => {
     const [loading, setLoading] = useState(true);
     const [openLoginDialog, setOpenLoginDialog] = useState(false);
     const navigate = useNavigate();
+    const { isLoggedIn,userId } = useAuth();
 
-    // สมมติว่าเราเก็บสถานะการ login ไว้ใน localStorage
-    const isLoggedIn = () => {
-        return localStorage.getItem('authToken') !== null;
-    };
+    console.log('isLoggedIn from BookDetail:', isLoggedIn);
 
     useEffect(() => {
         setLoading(true);
@@ -45,15 +44,12 @@ const BookDetail = () => {
     }, [id]);
 
     const handleAction = (action) => {
-        if (!isLoggedIn()) {
+        if (!isLoggedIn) {
             setOpenLoginDialog(true);
             return;
         }
-        const userId = localStorage.getItem('userId'); // หรือดึงจาก token ที่ decode แล้ว
-        if (!userId) {
-            navigate('/login');
-            return;
-        }
+        
+       
         
         if (action === 'purchase') {
 
@@ -83,7 +79,7 @@ const BookDetail = () => {
                 image_product: book.image_product,
                 description: book.detail
             };
-
+            console.log('userId in cart:', userId); 
            
             const currentCart = JSON.parse(localStorage.getItem(`cartItems_${userId}`)) || [];
             currentCart.push(cartItem);

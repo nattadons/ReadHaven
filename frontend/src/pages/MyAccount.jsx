@@ -17,7 +17,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import LeafMapApi from '../components/LeafMapApi';
 import MyAccountAdmin from './MyAccountAdmin';
-
+import { useAuth } from '../context/AuthContext';
 const MyAccount = () => {
     const [user, setUser] = useState({
         name: '',
@@ -38,13 +38,16 @@ const MyAccount = () => {
         severity: 'success'
     });
 
-    const token = localStorage.getItem('authToken');
+    const { token } = useAuth();
 
     useEffect(() => {
-        fetchUserData();
-    }, []);
+        if (token) {
+            fetchUserData();
+        }
+    }, [token]);
 
     const fetchUserData = async () => {
+
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/`, {
                 headers: {

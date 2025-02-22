@@ -13,29 +13,26 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-
+import { useAuth } from '../context/AuthContext';
 
 const Cart = () => {
     const navigate = useNavigate();
     const [cartItems, setCartItems] = useState([]);
     const [total, setTotal] = useState(0);
-    const [userId, setUserId] = useState(null); // เก็บ userId ไว้ใน state
+    const { userId, isLoggedIn, token } = useAuth(); // เพิ่ม token
 
     useEffect(() => {
-        // สมมติว่าเก็บ cart items ใน localStorage
-        const token = localStorage.getItem('authToken');
-        const userId = localStorage.getItem('userId'); // ต้องมี userId ของผู้ใช้ปัจจุบัน
-
-        if (!token || !userId) {
-            navigate('/login');
-            return;
+        // รอให้ token พร้อมก่อน
+        if (token && isLoggedIn) {
+            const items = JSON.parse(localStorage.getItem(`cartItems_${userId}`)) || [];
+            setCartItems(items);
+            calculateTotal(items);
         }
-        setUserId(userId);
-        const items = JSON.parse(localStorage.getItem(`cartItems_${userId}`)) || [];
-        setCartItems(items);
-        calculateTotal(items);
-    }, []);
+    }, [token, userId]);
 
+    if (!token) {
+        return null; // หรือแสดง loading state
+    }
     const calculateTotal = (items) => {
         const sum = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         setTotal(sum);
