@@ -1,49 +1,78 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userId, setUserId] = useState(null);
-    const [token, setToken] = useState(null);
+    const navigate = useNavigate();
 
-    // 🔹 ดึงค่าจาก localStorage เมื่อ component โหลด
     useEffect(() => {
-        const loggedInStatus = localStorage.getItem('isLoggedIn') === 'true';
+        // 🔹 โหลดค่าจาก localStorage เมื่อหน้าโหลด
         const storedUserId = localStorage.getItem('userId');
-        const storedToken = localStorage.getItem('authToken');
-
-        if (storedToken) {
-            setToken(storedToken);
-            setIsLoggedIn(loggedInStatus);
+        const loggedInStatus = JSON.parse(localStorage.getItem('isLoggedIn') || 'false');
+      
+        if (storedUserId && loggedInStatus) {
+           
             setUserId(storedUserId);
+            setIsLoggedIn(loggedInStatus);
         }
+      
+       
+       
     }, []);
+    
+   
+     // 🔹 อัปเดต localStorage ทุกครั้งที่ state เปลี่ยน
+     useEffect(() => {
+        if (isLoggedIn && userId) {
+            localStorage.setItem('userId', userId);
+            localStorage.setItem('isLoggedIn', isLoggedIn);
+        } else {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userId');
+        }
+       
+    }, [isLoggedIn, userId]); // อัปเดตทุกครั้งที่ค่าเปลี่ยน
 
-    // 🔹 อัปเดต localStorage ทุกครั้งที่ state เปลี่ยน
-    useEffect(() => {
-        localStorage.setItem('isLoggedIn', isLoggedIn);
-        localStorage.setItem('userId', userId || '');
-        localStorage.setItem('authToken', token || '');
-    }, [isLoggedIn, userId, token]); // อัปเดตทุกครั้งที่ค่าเปลี่ยน
+    
 
-    // 🔹 ฟังก์ชันล็อกอิน
-    const login = (token, userId) => {
+    const login = (userId) => {
+        
         setUserId(userId);
         setIsLoggedIn(true);
-        setToken(token);
+        localStorage.setItem('isLoggedIn', 'true');
+        localStorage.setItem('userId', userId);
+        navigate('/book');
+     
     };
 
-    // 🔹 ฟังก์ชันล็อกเอาต์
-    const logout = () => {
-        setUserId(null);
-        setIsLoggedIn(false);
-        setToken(null);
+    const logout = async () => {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/logout`, {
+                withCredentials: true,
+            });
+            
+            if (response.status === 200) {
+                // ล้าง state และ localStorage หลังจาก API call สำเร็จ
+                setUserId(null);
+                setIsLoggedIn(false);
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userId');
+                return true; // ส่งค่ากลับเพื่อให้รู้ว่า logout สำเร็จ
+            }
+            return false;
+        } catch (error) {
+            console.error('Logout error:', error);
+            return false;
+        }
     };
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, userId, token, login, logout }}>
+        <AuthContext.Provider value={{ isLoggedIn, userId, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

@@ -2,8 +2,16 @@ const express = require('express');
 const {
   getAllProducts,
   getProductById,
-  getRecommendedProducts // เพิ่ม function ใหม่
+  getRecommendedProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+  
+ 
 } = require('../controllers/productController');
+
+const isAdmin = require('../middleware/authMiddleware');
+const verifyToken = require('../middleware/authMiddleware'); // Import Middleware
 
 const router = express.Router();
 
@@ -15,5 +23,15 @@ router.get('/products/:id', getProductById);
 
 // GET: ดึงหนังสือแนะนำ
 router.get('/products/:id/recommended', getRecommendedProducts);
+
+
+router.post('/add', verifyToken, isAdmin, addProduct);
+
+router.put('/update/:id', verifyToken, isAdmin, updateProduct);
+
+router.delete('/delete/:id', verifyToken, isAdmin, deleteProduct);
+
+
+
 
 module.exports = router;

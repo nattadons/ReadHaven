@@ -25,9 +25,9 @@ const BookDetail = () => {
     const [loading, setLoading] = useState(true);
     const [openLoginDialog, setOpenLoginDialog] = useState(false);
     const navigate = useNavigate();
-    const { isLoggedIn,userId } = useAuth();
+    const { isLoggedIn } = useAuth();
 
-    console.log('isLoggedIn from BookDetail:', isLoggedIn);
+
 
     useEffect(() => {
         setLoading(true);
@@ -43,7 +43,7 @@ const BookDetail = () => {
             });
     }, [id]);
 
-    const handleAction = (action) => {
+    const handleAction = async (action) => {
         if (!isLoggedIn) {
             setOpenLoginDialog(true);
             return;
@@ -70,22 +70,25 @@ const BookDetail = () => {
             navigate('/payment');
             
         } else if (action === 'cart') {
-            // เพิ่มสินค้าลงใน cart
-            const cartItem = {
-                id: book.id,
-                name: book.name,
-                price: book.price,
-                quantity: 1,
-                image_product: book.image_product,
-                description: book.detail
-            };
-            console.log('userId in cart:', userId); 
-           
-            const currentCart = JSON.parse(localStorage.getItem(`cartItems_${userId}`)) || [];
-            currentCart.push(cartItem);
-            localStorage.setItem(`cartItems_${userId}`, JSON.stringify(currentCart));
-            
-            navigate('/cart');
+            try {
+                await axios.post(
+                    `${import.meta.env.VITE_API_URL}/cart/add`,
+                    {
+                        id: book._id,  
+                        name: book.name,
+                        price: book.price,
+                        quantity: 1,
+                        image_product: book.image_product,
+                        description: book.detail
+                    },
+                    { withCredentials: true }
+                );
+                
+               
+            } catch (error) {
+                // Handle error appropriately
+                console.error('Error adding to cart:', error);
+            }
         }
     };
     const handleLoginRedirect = () => {

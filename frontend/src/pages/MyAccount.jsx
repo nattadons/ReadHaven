@@ -5,12 +5,17 @@ import {
     Box,
     Typography,
     TextField,
-  
     Paper,
     Button,
     Snackbar,
-    Alert
+    Alert,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import SaveIcon from '@mui/icons-material/Save';
@@ -18,6 +23,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import LeafMapApi from '../components/LeafMapApi';
 import MyAccountAdmin from './MyAccountAdmin';
 import { useAuth } from '../context/AuthContext';
+
 const MyAccount = () => {
     const [user, setUser] = useState({
         name: '',
@@ -29,6 +35,12 @@ const MyAccount = () => {
         longitude: null
     });
     
+    // Validation errors
+    const [errors, setErrors] = useState({
+        name: '',
+        email: '',
+        phone_number: ''
+    });
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedUser, setEditedUser] = useState({});
@@ -37,22 +49,22 @@ const MyAccount = () => {
         message: '',
         severity: 'success'
     });
+    const [openDialog, setOpenDialog] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const { token } = useAuth();
+    const { isLoggedIn, logout } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
-        if (token) {
+        if (isLoggedIn) {
             fetchUserData();
         }
-    }, [token]);
+    }, [isLoggedIn]);
 
     const fetchUserData = async () => {
-
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+               withCredentials: true,
             });
             setUser(prevUser => ({
                 ...prevUser,
@@ -60,25 +72,64 @@ const MyAccount = () => {
             }));
             setEditedUser(response.data);
         } catch (error) {
-            console.error('Error fetching data:', error);
-            showSnackbar('Error fetching user data', 'error');
+            if (error.response) {
+                if (error.response.status === 401) {
+                    setOpenDialog(true);
+                } else {
+                    showSnackbar('Error fetching user data', 'error');
+                }
+            } else {
+                showSnackbar('Network error, please try again', 'error');
+            }
         }
     };
+
+    const handleDialogClose = () => {
+        logout(); 
+        navigate('/login');
+        setOpenDialog(false);
+    };
     
-    console.log('image is',user.imageUrl);
     if (user?.role === 'admin') {
         return <MyAccountAdmin />;
-      }
-    
+    }
 
     const handleEdit = () => {
         setIsEditing(true);
         setEditedUser(user);
+        setErrors({
+            name: '',
+            email: '',
+            phone_number: ''
+        });
     };
 
     const handleCancel = () => {
         setIsEditing(false);
         setEditedUser(user);
+        setErrors({
+            name: '',
+            email: '',
+            phone_number: ''
+        });
+    };
+
+    // Form validation functions
+    const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
+    const validatePhoneNumber = (phone) => /^[0-9]{10}$/.test(phone);
+    const validateName = (name) => name.trim().length > 0;
+
+    const validateField = (field, value) => {
+        switch (field) {
+            case 'name':
+                return validateName(value) ? '' : 'Name is required';
+            case 'email':
+                return validateEmail(value) ? '' : 'Please enter a valid email address';
+            case 'phone_number':
+                return validatePhoneNumber(value) ? '' : 'Phone number must be 10 digits';
+            default:
+                return '';
+        }
     };
 
     const handleChange = (field) => (event) => {
@@ -86,9 +137,16 @@ const MyAccount = () => {
             return;
         }
 
+        const value = event.target.value;
         setEditedUser({
             ...editedUser,
-            [field]: event.target.value
+            [field]: value
+        });
+
+        // Validate the field in real time
+        setErrors({
+            ...errors,
+            [field]: validateField(field, value)
         });
     };
 
@@ -109,7 +167,24 @@ const MyAccount = () => {
         });
     };
 
+    const validateForm = () => {
+        const newErrors = {
+            name: validateField('name', editedUser.name),
+            email: user.googleId ? '' : validateField('email', editedUser.email),
+            phone_number: validateField('phone_number', editedUser.phone_number),
+        };
+
+        setErrors(newErrors);
+        return !Object.values(newErrors).some(error => error);
+    };
+
     const handleSave = async () => {
+        if (!validateForm()) {
+            showSnackbar('Please correct the errors before saving', 'error');
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
             const updates = { ...editedUser };
             if (user.googleId) {
@@ -120,9 +195,7 @@ const MyAccount = () => {
                 `${import.meta.env.VITE_API_URL}/users/update`,
                 updates,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                   withCredentials: true,
                 }
             );
 
@@ -130,8 +203,19 @@ const MyAccount = () => {
             setIsEditing(false);
             showSnackbar('Profile updated successfully');
         } catch (error) {
-            console.error('Error updating profile:', error);
-            showSnackbar('Error updating profile', 'error');
+            if (error.response) {
+                if (error.response.status === 401) {
+                    setOpenDialog(true);
+                } else if (error.response.status === 400 && error.response.data.message) {
+                    showSnackbar(error.response.data.message, 'error');
+                } else {
+                    showSnackbar('Error updating profile', 'error');
+                }
+            } else {
+                showSnackbar('Network error, please try again', 'error');
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -200,14 +284,16 @@ const MyAccount = () => {
                                 color="primary"
                                 onClick={handleSave}
                                 startIcon={<SaveIcon />}
+                                disabled={isSubmitting}
                             >
-                                Save
+                                {isSubmitting ? 'Saving...' : 'Save'}
                             </Button>
                             <Button
                                 variant="outlined"
                                 color="error"
                                 onClick={handleCancel}
                                 startIcon={<CancelIcon />}
+                                disabled={isSubmitting}
                             >
                                 Cancel
                             </Button>
@@ -216,15 +302,12 @@ const MyAccount = () => {
 
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                         {/* Profile Image */}
-                       
-                        
                         <Box sx={{ display: "flex", justifyContent: "flex-start" }}>
                             {user.imageUrl ? (
                                 <img
                                     src={user.imageUrl}
-                                    referrerPolicy="no-referrer" //สำคัญเอาเเก้บัค ภาพ
-                                    
-                                    alt={"../assets/images/profile_backup.jpg"}
+                                    referrerPolicy="no-referrer"
+                                    alt={"Profile image"}
                                     onError={(e) => (e.target.src = '../assets/images/profile_backup.jpg')}
                                     style={{
                                         width: 80,
@@ -262,6 +345,8 @@ const MyAccount = () => {
                                     value={isEditing ? editedUser.name : user.name}
                                     onChange={handleChange('name')}
                                     disabled={!isEditing}
+                                    error={!!errors.name && isEditing}
+                                    helperText={isEditing && errors.name}
                                     sx={{
                                         '& .MuiInputBase-input.Mui-disabled': {
                                             bgcolor: 'action.hover',
@@ -278,6 +363,9 @@ const MyAccount = () => {
                                     value={isEditing ? editedUser.phone_number : user.phone_number}
                                     onChange={handleChange('phone_number')}
                                     disabled={!isEditing}
+                                    type="tel"
+                                    error={!!errors.phone_number && isEditing}
+                                    helperText={isEditing && errors.phone_number}
                                     sx={{
                                         '& .MuiInputBase-input.Mui-disabled': {
                                             bgcolor: 'action.hover',
@@ -293,8 +381,11 @@ const MyAccount = () => {
                                     fullWidth
                                     value={isEditing ? editedUser.email : user.email}
                                     onChange={handleChange('email')}
+                                    type="email"
                                     disabled={!isEditing || Boolean(user.googleId)}
-                                    helperText={user.googleId && "Email cannot be edited for Google accounts"}
+                                    error={!!errors.email && isEditing && !user.googleId}
+                                    helperText={(isEditing && !user.googleId && errors.email) || 
+                                              (user.googleId && "Email cannot be edited for Google accounts")}
                                     sx={{
                                         '& .MuiInputBase-input.Mui-disabled': {
                                             bgcolor: 'action.hover',
@@ -315,6 +406,7 @@ const MyAccount = () => {
                 </Box>
             </Paper>
 
+            {/* Snackbar section */}
             <Snackbar
                 open={snackbar.open}
                 autoHideDuration={6000}
@@ -324,6 +416,31 @@ const MyAccount = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
+                                    
+            {/* Dialog section */}
+            <Dialog 
+                open={openDialog} 
+                onClose={handleDialogClose}
+                PaperProps={{
+                    sx: {
+                        borderRadius: '16px',
+                        width: '100%',
+                        maxWidth: '400px',
+                        p: 2,
+                        textAlign: 'center',
+                    }
+                }}
+            >
+                <DialogTitle>Session Expired</DialogTitle>
+                <DialogContent>
+                    <Typography>You have been logged out due to inactivity. Please log in again.</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDialogClose} variant="contained" sx={{ backgroundColor: 'text.primary', color: 'primary.main' }}>
+                        Log In Again
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 };

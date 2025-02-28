@@ -4,10 +4,15 @@ import homeimage from '../assets/images/home.jpg';
 import { useNavigate } from 'react-router-dom';
 
 
-const Home = () => {
+const Home =  () => {
   const navigate = useNavigate();
+  
+
+
+
   const Test = () => {
     navigate('/testimage');
+  
 };
 
 
@@ -15,7 +20,7 @@ const Home = () => {
     <>
 
 
-      <Container className="home-content" sx={{mb:'300px'}}>
+      <Container className="home-content" sx={{mb:'300px'}} >
         <Box className="left-content" sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }} >
           <Typography
             variant="h3"
@@ -83,7 +88,7 @@ const Home = () => {
           </Box>
         </Box>
         <Box className="right-content">
-          <img src={homeimage} alt="Books" className="home-image" />
+          <img src={homeimage} alt="Books" className="home-image" loading="lazy"  />
 
 
         </Box>

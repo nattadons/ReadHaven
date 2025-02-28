@@ -7,6 +7,7 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 
+
 // ดึงข้อมูลผู้ใช้ทั้งหมด
 exports.getAllUsers = async (req, res) => {
   try {
@@ -72,16 +73,27 @@ exports.loginUser = async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials!' });
     }
 
+
     // สร้าง JWT Token
     const token = jwt.sign(
       { userId: user._id, email: user.email }, // Payload
       JWT_SECRET, // Secret Key
-      { expiresIn: '1h' } // Token มีอายุ 1 ชั่วโมง
+      { expiresIn: '7d' } // Token มีอายุ 7 วัน
     );
+
+    res.cookie('token', token, { 
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 วัน
+      httpOnly: true ,
+      secure: true,
+      sameSite: 'none',
+
+      
+
+    }); // ส่ง token กลับไปเป็น cookie
 
     res.status(200).json({
       message: 'Login successful!',
-      token,
+     
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (err) {
@@ -93,25 +105,25 @@ exports.loginUser = async (req, res) => {
 // ฟังก์ชัน login ด้วย Google
 
 
+const axios = require('axios'); // ใช้ axios ในการทำคำขอไปที่ Google API
+
 exports.loginWithGoogle = async (req, res) => {
   try {
-    // ดึง id_token จาก Authorization header
-    const id_token = req.headers.authorization?.split(' ')[1]; // แยก Bearer token
+    // ดึง access_token จาก Authorization header
+    const access_token = req.headers.authorization?.split(' ')[1]; // แยก Bearer token
 
-    if (!id_token) {
-      return res.status(400).json({ message: 'ID token is required' });
+    if (!access_token) {
+      return res.status(400).json({ message: 'Access token is required' });
     }
 
-    // ตรวจสอบ id_token กับ Google
-    const ticket = await client.verifyIdToken({
-      idToken: id_token,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    }).catch((error) => {
-      return res.status(401).json({ message: 'Invalid ID token', error: error.message });
+    // ใช้ access_token เพื่อตรวจสอบข้อมูลผู้ใช้จาก Google
+    const response = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
     });
 
-    const payload = ticket.getPayload(); // ข้อมูลผู้ใช้จาก Google
-    const { sub: googleId, name, email, picture: imageUrl } = payload;
+    const { sub: googleId, name, email, picture: imageUrl } = response.data;
 
     // ตรวจสอบว่าผู้ใช้อยู่ในระบบหรือไม่
     let user = await Users.findOne({ email });
@@ -132,14 +144,20 @@ exports.loginWithGoogle = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: '1h' }
+      { expiresIn: '7d' }
     );
+
+    res.cookie('token', token, { 
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 วัน
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+    }); // ส่ง token กลับไปเป็น cookie
 
     console.log('Token generated:', token);
 
     res.status(200).json({
       message: 'Login successful!',
-      token,
       user: {
         id: user._id,
         name: user.name,
@@ -153,6 +171,38 @@ exports.loginWithGoogle = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+
+
+
+
+exports.logout = async (req, res) => {
+  try {
+    // ล้าง JWT cookie
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none'
+    });
+
+    res.status(200).json({
+      message: 'Logged out successfully'
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Logout failed' });
+  }
+};
+
+
+
+
+
+
+
+
+
+
 
 // Add this to userController.js
 exports.updateUser = async (req, res) => {

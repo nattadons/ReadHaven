@@ -4,6 +4,7 @@ const {
   createUser,
   loginUser,
   loginWithGoogle,// ฟังก์ชันที่สร้างผู้ใช้จาก Google
+  logout, 
   updateUser, 
  
  
@@ -24,6 +25,8 @@ router.post('/login', loginUser);
 // POST: สร้างผู้ใช้ใหม่จาก Google Login
 router.post('/google', loginWithGoogle);  // เพิ่ม route สำหรับการสร้างผู้ใช้จาก Google
 
+
+router.get('/logout', logout); // Add new logout route
 // Add new update route - protected with verifyToken middleware
 router.put('/update', verifyToken, updateUser);
 
