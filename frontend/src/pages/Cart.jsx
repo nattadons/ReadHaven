@@ -8,52 +8,110 @@ import {
     Grid,
     IconButton,
     Paper,
- 
+    CircularProgress,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 const Cart = () => {
     const navigate = useNavigate();
     const [cartItems, setCartItems] = useState([]);
     const [total, setTotal] = useState(0);
-    const { userId, isLoggedIn, token } = useAuth(); // เพิ่ม token
+    const [loading, setLoading] = useState(true);
+    const { isLoggedIn } = useAuth();
+
+
 
     useEffect(() => {
-        // รอให้ token พร้อมก่อน
-        if (token && isLoggedIn) {
-            const items = JSON.parse(localStorage.getItem(`cartItems_${userId}`)) || [];
-            setCartItems(items);
-            calculateTotal(items);
+        if (isLoggedIn) {
+            fetchCartItems();
         }
-    }, [token, userId]);
+    }, [isLoggedIn]);
 
-    if (!token) {
-        return null; // หรือแสดง loading state
-    }
+    // ฟังก์ชันดึงข้อมูลตะกร้า
+    const fetchCartItems = async () => {
+        try {
+            setLoading(true);
+            
+            const response = await axios.get(
+                `${import.meta.env.VITE_API_URL}/cart`,
+                { withCredentials: true }
+            );
+            setCartItems(response.data);
+            calculateTotal(response.data);
+        } catch (error) {
+            console.error('Error fetching cart items:', error);
+        } finally {
+            setLoading(false);
+          
+        }
+    };
+
+    
+
+
+
     const calculateTotal = (items) => {
         const sum = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
         setTotal(sum);
     };
 
-    const updateQuantity = (index, newQuantity) => {
+    // อัพเดทจำนวนสินค้า
+    const updateQuantity = async (productId, newQuantity) => {
         if (newQuantity < 1) return;
-        
-        const updatedItems = [...cartItems];
-        updatedItems[index].quantity = newQuantity;
-        setCartItems(updatedItems);
-        localStorage.setItem(`cartItems_${userId}`, JSON.stringify(updatedItems));
-        calculateTotal(updatedItems);
-    };
+    
+        try {
+            await axios.put(
+                `${import.meta.env.VITE_API_URL}/cart/update`,
+                { productId, quantity: newQuantity },
+                { withCredentials: true }
+            );
+    
+            // ✅ อัปเดต state โดยตรง
+            setCartItems((prevCartItems) => {
+                const updatedCart = prevCartItems.map(item =>
+                    item.productId === productId ? { ...item, quantity: newQuantity } : item
+                );
+                calculateTotal(updatedCart);
+                return updatedCart;
+            });
 
-    const removeItem = (index) => {
-        const updatedItems = cartItems.filter((_, i) => i !== index);
-        setCartItems(updatedItems);
-        localStorage.setItem(`cartItems_${userId}`, JSON.stringify(updatedItems));
-        calculateTotal(updatedItems);
+
+            
+        } catch (error) {
+            console.error('Error updating quantity:', error);
+        }
     };
+    
+    
+
+    // ลบสินค้า
+    const removeItem = async (productId) => {
+        try {
+            await axios.delete(
+                `${import.meta.env.VITE_API_URL}/cart/${productId}`,
+                { withCredentials: true }
+            );
+    
+            // ✅ อัปเดต state โดยตรง
+            setCartItems((prevCartItems) => {
+                const updatedCart = prevCartItems.filter(item => item.productId !== productId);
+                calculateTotal(updatedCart);
+                return updatedCart;
+            });
+
+
+            
+        } catch (error) {
+            console.error('Error removing item:', error);
+        }
+    };
+    
+
+    
 
     const handleCheckout = () => {
         if (cartItems.length > 0) {
@@ -62,17 +120,28 @@ const Cart = () => {
                 totalAmount: total,
                 timestamp: new Date().getTime()
             };
-            
-            // เก็บข้อมูลใน sessionStorage
+
             sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
-            
-            // ส่ง state ผ่าน navigation ด้วย
-            navigate('/payment', { 
+
+            navigate('/payment', {
                 state: checkoutData,
-                replace: true // ป้องกันการกด back
+                replace: true
             });
         }
     };
+
+    if (loading) {
+        return (
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '100vh'
+            }}>
+                <CircularProgress color='text.primary'size="4rem" />
+            </Box>
+        );
+    }
 
     return (
         <Container maxWidth="lg">
@@ -81,8 +150,6 @@ const Cart = () => {
                 mb: '300px',
                 mx: '50px',
             }}>
-                
-
                 <Typography variant="h4" component="h1" gutterBottom>
                     Your Cart
                 </Typography>
@@ -93,9 +160,9 @@ const Cart = () => {
                     </Typography>
                 ) : (
                     <>
-                        {cartItems.map((item, index) => (
+                        {cartItems.map((item) => (
                             <Paper
-                                key={index}
+                                key={item.productId}
                                 elevation={0}
                                 sx={{
                                     p: 2,
@@ -125,20 +192,19 @@ const Cart = () => {
                                     <Grid item xs={12} sm={2}>
                                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                             <IconButton
-                                                sx={{color: 'text.primary',}}
+                                                sx={{ color: 'text.primary' }}
                                                 size="small"
-                                                onClick={() => updateQuantity(index, item.quantity - 1)}
+                                                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                                             >
                                                 <RemoveIcon />
                                             </IconButton>
                                             <Typography sx={{ mx: 2 }}>{item.quantity}</Typography>
                                             <IconButton
-                                                sx={{color: 'text.primary', }}
+                                                sx={{ color: 'text.primary' }}
                                                 size="small"
-                                                onClick={() => updateQuantity(index, item.quantity + 1)}
+                                                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                                             >
-                                                <AddIcon  />
-                                
+                                                <AddIcon />
                                             </IconButton>
                                         </Box>
                                     </Grid>
@@ -146,7 +212,7 @@ const Cart = () => {
                                         <Typography>฿{(item.price * item.quantity).toFixed(2)}</Typography>
                                     </Grid>
                                     <Grid item xs={12} sm={2}>
-                                        <IconButton onClick={() => removeItem(index)}>
+                                        <IconButton onClick={() => removeItem(item.productId)}>
                                             <DeleteIcon />
                                         </IconButton>
                                     </Grid>

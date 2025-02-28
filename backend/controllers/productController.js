@@ -39,17 +39,21 @@ exports.getRecommendedProducts = async (req, res) => {
 };
 
 
+// เพิ่มสินค้าใหม่
 exports.addProduct = async (req, res) => {
   try {
-    const { name, author, price, detail } = req.body;
-    const imageUrl = req.file ? req.file.path : null;
+    console.log('req ที่ส่งมามีอะไรบ้าง',req.body);
+    const { name, author, price, detail, overview } = req.body;
+    const image_product = req.file ? req.file.path : "";
+    
 
     const newProduct = new Products({
       name,
       author,
       price,
       detail,
-      imageUrl
+      overview,
+      image_product
     });
 
     const savedProduct = await newProduct.save();
@@ -59,12 +63,66 @@ exports.addProduct = async (req, res) => {
   }
 };
 
+// อัพเดทสินค้า
+exports.updateProduct = async (req, res) => {
+  try {
+    const { name, author, price, detail, overview } = req.body;
+    const updates = {
+      name,
+      author,
+      price,
+      detail,
+      overview
+    };
+    
+    // ถ้ามีการอัพโหลดไฟล์ใหม่
+    if (req.file) {
+      updates.imageUrl = req.file.path;
+      
+      // ลบรูปเก่าถ้ามี
+      const product = await Products.findById(req.params.id);
+      if (product && product.imageUrl) {
+        const oldImagePath = path.join(__dirname, '..', product.imageUrl);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+    }
+    
+    const updatedProduct = await Products.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true }
+    );
+    
+    if (!updatedProduct) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+    
+    res.status(200).json(updatedProduct);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// ลบสินค้า
 exports.deleteProduct = async (req, res) => {
   try {
-    const product = await Products.findByIdAndDelete(req.params.id);
+    const product = await Products.findById(req.params.id);
+    
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
+    
+    // ลบรูปภาพถ้ามี
+    if (product.image_product) {
+      const imagePath = path.join(__dirname, '..', product.image_product);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+    
+    await Products.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Product deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });

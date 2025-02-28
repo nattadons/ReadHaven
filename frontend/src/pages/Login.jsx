@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, } from 'react';
 import { Box, Container, Button, Typography, Grid, Link, IconButton, InputAdornment, FormControl, InputLabel, OutlinedInput, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -18,19 +18,13 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const { isLoggedIn, login } = useAuth();
+    const { login } = useAuth();
 
 
 
 
     const navigate = useNavigate();
-    //login ด้วยระบบ
-    useEffect(() => {
-        if (isLoggedIn) {
-            navigate('/book'); // เปลี่ยนไปหน้า book หรือหน้าอื่นที่เหมาะสม
-            
-        }
-    }, [isLoggedIn, navigate]);
+
 
 
 
@@ -49,17 +43,17 @@ const Login = () => {
         }
 
         try {
-            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/users/login`, { email, password });
-            console.log(data)
-            login(data.token,data.user.id); // ใช้ token จาก API
+            const { data } = await axios.post(`${import.meta.env.VITE_API_URL}/users/login`, { email, password }, { withCredentials: true });
+            console.log('response data', data)
+            login(data.user.id); // ใช้ token จาก API
             alert("Login successful!");
-      
-            navigate('/book');
+
+
         } catch (error) {
             const errorMessage = error.response?.data?.message || 'Login failed!';
             console.error(errorMessage);
             alert(errorMessage);
-           
+
         }
     };
 
@@ -102,7 +96,7 @@ const Login = () => {
                     />
 
                     <FormControl fullWidth variant="outlined" sx={{ mt: '32px' }}>
-                        <InputLabel htmlFor="password" color="text.primary">Password</InputLabel>
+                        <InputLabel htmlFor="password" >Password</InputLabel>
                         <OutlinedInput
                             id="password"
                             type={showPassword ? 'text' : 'password'}
@@ -113,10 +107,11 @@ const Login = () => {
                             endAdornment={
                                 <InputAdornment position="end">
                                     <IconButton
-                                        aria-label="toggle password visibility"
+                                        aria-label={showPassword ? 'Hide password' : 'Show password'}
                                         onClick={handleClickShowPassword}
                                         onMouseDown={handleMouseDownPassword}
                                         edge="end"
+                                        tabIndex={0}
                                     >
                                         {showPassword ? <VisibilityOff /> : <Visibility />}
                                     </IconButton>
@@ -135,10 +130,13 @@ const Login = () => {
                     </Button>
                 </Box>
                 <Link
-                    href=""
+                    component="button"
                     onClick={handleCreateAccount}
                     color="text.primary"
                     sx={{
+                        border: 'none',
+                        background: 'none',
+                        cursor: 'pointer',
                         display: 'block',
                         mb: 4,
                         mt: 4,
@@ -163,7 +161,7 @@ const Login = () => {
                 </Typography>
                 <Grid container spacing={4} justifyContent="center">
                     <Grid item>
-                        
+
 
                         <LoginComponent>
                         </LoginComponent>

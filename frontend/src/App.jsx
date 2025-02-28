@@ -20,14 +20,19 @@ import MyAccountAdmin from './pages/MyAccountAdmin';
 
 
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
+const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
 
 function App() {
 
 
   return (
+    <GoogleOAuthProvider clientId={clientId}> {/* ✅ เพิ่ม GoogleOAuthProvider */}
+    <Router>
     <AuthProvider>
     <ThemeProvider theme={theme}>
-      <Router>
+      
         <Navbar />
         <div className="content" >
           
@@ -47,9 +52,11 @@ function App() {
           </Routes>
         </div>
         <Footer />
-      </Router>
+      
     </ThemeProvider>
     </AuthProvider>
+    </Router>
+    </GoogleOAuthProvider>
     
   );
 }

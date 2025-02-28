@@ -1,94 +1,56 @@
-import { useEffect, useState } from 'react';
+import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { gapi } from 'gapi-script';
 import GoogleLogo from '../assets/icons/google.png';
 import { Button } from '@mui/material';
 
-
-
-
-const Googlelogin = () => {
-  const [, setUserInfo] = useState();
+const GoogleLogin = () => {
   const { login } = useAuth();
 
-  // ใช้ useEffect เพื่อโหลด Google API client เมื่อ component ถูก mount
-  useEffect(() => {
-    const initClient = () => {
-      gapi.client.init({
-
-        clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,  // ✅ ใช้ค่า env
-        scope: 'profile email',
-      }).then(() => {
-        // ตรวจสอบว่า auth instance โหลดเสร็จสมบูรณ์
-        const authInstance = gapi.auth2.getAuthInstance();
-        if (authInstance.isSignedIn.get()) {
-          const userData = getUserInfo(); // ถ้าผู้ใช้ล็อกอินแล้ว, ดึงข้อมูลผู้ใช้
-          setUserInfo(userData);
-        }
-      });
-    };
-    gapi.load('client:auth2', initClient); // โหลด client:auth2 เมื่อ component ถูก mount
-  }, []);
-
-  // ดึงข้อมูลผู้ใช้จาก Google API
-  const getUserInfo = () => {
-    const user = gapi.auth2.getAuthInstance().currentUser.get();
-    const profile = user.getBasicProfile();
-    return {
-      id: profile.getId(),
-      name: profile.getName(),
-      email: profile.getEmail(),
-      imageUrl: profile.getImageUrl(),
-    };
-  };
-
-  // ฟังก์ชันสำหรับการล็อกอิน
-  const handleLogin = () => {
-    const authInstance = gapi.auth2.getAuthInstance();
-    authInstance.signIn().then(() => {
-      const user = authInstance.currentUser.get();// ดึง token
-      const idToken = user.getAuthResponse().id_token; // ดึง token
-     
-
-
-      const userData = getUserInfo();
-      console.log(userData)// ดึงข้อมูลผู้ใช้
-      setUserInfo(userData); // เก็บข้อมูลผู้ใช้ใน state
-      // ส่งข้อมูลผู้ใช้ไปที่ server ด้วย axios
-      axios.post(`${import.meta.env.VITE_API_URL}/users/google`, userData, {
-        headers: {
-          Authorization: `Bearer ${idToken}`, // ส่ง token ในรูปแบบ Bearer
-        },
-      })
-        .then((response) => {
-
-          console.log('User data sent successfully:', response.data);
-         
-          login(response.data.token,response.data.user.id);  // ส่ง token และข้อมูลผู้ใช้ไปที่ login ใน AuthContext
-        
-
-        })
-        .catch((error) => {
-          console.error('Error sending user data:', error);
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (response) => {
+      try {
+        console.log('มีโทเคนไหมจ้ะ', response);
+        const accessToken = response.access_token; // ใช้ access token แทน idToken
+        if (!accessToken) throw new Error("No Access Token received");
+  
+        // ดึงข้อมูลผู้ใช้จาก Google ด้วย access token
+        const userData = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         });
-    }).catch((error) => {
-      console.error('Google Sign-In Error:', error);
-    });
-  };
+  
+        console.log('User data from Google:', userData.data);
+  
+        // ส่งข้อมูลไปยัง backend หรือดำเนินการอื่นๆ
+        const serverResponse = await axios.post(
+          `${import.meta.env.VITE_API_URL}/users/google`,
+          {}, // Body ไม่ต้องใส่อะไร เพราะส่ง token ผ่าน Header
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`, // ส่ง Access Token ในรูปแบบ Bearer
+            },
+            withCredentials: true, // ใช้ cookie-based auth
+          }
+        );
+  
+        console.log('User data sent successfully:', serverResponse.data);
+        login(serverResponse.data.user.id);
+      } catch (error) {
+        console.error('Error during login:', error);
+      }
+    },
+    onError: (error) => console.error('Google Login Error:', error),
+    useOneTap: false, // ใช้การล็อกอินแบบปกติ
+  });
+  
 
   return (
-    <div>
-
-
-      <Button onClick={handleLogin}
-        variant="outlined"
-        sx={{ height: '52px', width: '52px', minWidth: '52px', color: 'text.primary', padding: 0 }}
-      >
-        <img src={GoogleLogo} alt="Facebook" style={{ height: '100%', width: '100%' }} />
-      </Button>
-    </div>
+    <Button onClick={() => googleLogin()} variant="outlined" sx={{ height: '52px', width: '52px', minWidth: '52px', color: 'text.primary', padding: 0 }}>
+      <img src={GoogleLogo} alt="Google" style={{ height: '100%', width: '100%' }} />
+    </Button>
   );
 };
 
-export default Googlelogin;
+export default GoogleLogin;

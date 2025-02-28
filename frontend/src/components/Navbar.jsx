@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import AppBar from '@mui/material/AppBar';
@@ -14,13 +15,19 @@ import MenuItem from '@mui/material/MenuItem';
 import logo from '../assets/images/logo.svg';
 import BookIcon from '../assets/icons/bookicon.svg';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material';
 const pages = ['Home', 'About', 'Books'];
 
 function Navbar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const navigate = useNavigate();
   const { isLoggedIn, logout } = useAuth();
+  const [openLoginDialog, setOpenLoginDialog] = useState(false);
 
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
@@ -46,10 +53,22 @@ function Navbar() {
     navigate('/login');
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-    handleCloseNavMenu();
+  const handleDialog=() => {
+    setOpenLoginDialog(true)
+  };
+
+  const handleLogout = async () => {
+    
+    const success = await logout();
+    if (success) {
+      navigate('/login');
+      handleCloseNavMenu();
+      setOpenLoginDialog(false);
+    } else {
+      // แจ้งเตือน error ถ้าต้องการ
+      console.error('Logout failed');
+      setOpenLoginDialog(false);
+    }
   };
 
   const handleMyAccount = () => {
@@ -240,7 +259,8 @@ function Navbar() {
                   |
                 </Typography>
                 <Button
-                  onClick={handleLogout}
+                
+                  onClick={handleDialog}
                   sx={{
                     color: 'text.primary',
                     fontSize: {
@@ -279,6 +299,41 @@ function Navbar() {
             )}
           </Box>
         </Toolbar>
+
+
+
+        {/* Login Dialog */}
+        <Dialog
+          open={openLoginDialog}
+          onClose={() => setOpenLoginDialog(false)}
+          PaperProps={{
+            sx: {
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '400px',
+              p: 2,
+              textAlign: 'center',
+            }
+          }}
+        >
+          <DialogTitle>Logout</DialogTitle>
+          <DialogContent>
+            <Typography>
+            Are you sure you want to log out?
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button variant="outlined" color='text.primary' onClick={() => setOpenLoginDialog(false)}    >Cancel</Button>
+            <Button onClick={handleLogout} variant="contained" sx={{
+              backgroundColor: 'text.primary',
+              color: 'primary.main'
+            }}>
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+
       </Container>
     </AppBar>
   );

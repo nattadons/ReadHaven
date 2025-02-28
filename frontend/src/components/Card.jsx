@@ -23,7 +23,7 @@ const MediaCard = ({ product }) => {
                 image={product.image_product} // ใช้ product จาก props
                 title={product.name}
             />
-            <CardContent>
+            <CardContent sx={{height: 120}}>
                 <Typography gutterBottom fontWeight="medium" fontSize="20px" sx={{ color: 'text.primary'}}>
                     {product.name}
                 </Typography>

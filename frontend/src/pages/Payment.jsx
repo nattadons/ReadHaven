@@ -14,6 +14,11 @@ import {
     Alert,
     Paper,
     Divider,
+    Snackbar,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import axios from 'axios';
@@ -23,11 +28,18 @@ const Payment = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+   
     const [userData, setUserData] = useState(null);
     const [checkoutData, setCheckoutData] = useState(null);
     const [paymentMethod, setPaymentMethod] = useState('promptpay');
-    const { isLoggedIn,token } = useAuth();
+    const { isLoggedIn,logout } = useAuth();
+    const [openDialog, setOpenDialog] = useState(false); // สถานะเปิด/ปิด dialog
+    const [snackbar, setSnackbar] = useState({
+        open: false,
+        message: '',
+        severity: 'success'
+    });
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -35,14 +47,12 @@ const Payment = () => {
                 setLoading(true);
                 
                 // รอให้ token พร้อมก่อน
-                if (token && isLoggedIn) {
+                if (isLoggedIn) {
                     // ดึงข้อมูลผู้ใช้
                     const userResponse = await axios.get(
                         `${import.meta.env.VITE_API_URL}/users/`,
                         {
-                            headers: {
-                                Authorization: `Bearer ${token}`
-                            }
+                           withCredentials: true,
                         }
                     );
                     setUserData(userResponse.data);
@@ -66,19 +76,50 @@ const Payment = () => {
                     setCheckoutData(orderData);
                 }
             } catch (err) {
-                console.error('Error:', err);
-                setError(err.message || 'มีข้อผิดพลาดในการดึงข้อมูล');
-                // จะ redirect ไป cart เมื่อเกิด error เท่านั้น
-                if (err.message !== 'No checkout data found') {
+
+                if (err.response) {
+                    // เช็ค status code
+                    if (err.response.status === 401) {
+    
+                        setOpenDialog(true);
+                       
+                       
+                    } else {
+                        showSnackbar('Something went wrong, please try again',err);
+                        navigate('/cart');
+                    }
+                } else {
+                    showSnackbar('Network error, please try again', 'error');
                     navigate('/cart');
                 }
+                
+              
+
+                
+                
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [token, navigate, location.state]);
+    }, [isLoggedIn, navigate, location.state]);
+
+
+    const handleDialogClose = () => {
+        logout(); 
+        navigate('/login'); // นำทางไปหน้า login
+        setOpenDialog(false); // ปิด dialog
+    };
+
+
+    const showSnackbar = (message, severity = 'success') => {
+        setSnackbar({
+            open: true,
+            message,
+            severity
+        });
+    };
 
     const handlePaymentChange = (event) => {
         setPaymentMethod(event.target.value);
@@ -87,7 +128,7 @@ const Payment = () => {
     const handleCheckout = async () => {
         try {
            
-            if (!token) {
+            if (!isLoggedIn) {
                 navigate('/login');
                 return;
             }
@@ -109,9 +150,7 @@ const Payment = () => {
                 `${import.meta.env.VITE_API_URL}/orders`,
                 orderData,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                    withCredentials: true,
                 }
             );
 
@@ -127,9 +166,13 @@ const Payment = () => {
             });
 
         } catch (err) {
-            setError(err.response?.data?.message || 'เกิดข้อผิดพลาดในการสั่งซื้อ');
+            if (err.response) {
+                showSnackbar(err.response.data.message, 'error');
+            } else {
+                showSnackbar('Network error, please try again', 'error');
         }
     };
+}
 
     const handleMyAccount = () => {
         navigate('/myaccount');
@@ -143,7 +186,7 @@ const Payment = () => {
         );
     }
      // ถ้ายังไม่มี token ให้แสดง loading
-     if (!token) {
+     if (!isLoggedIn) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
                 <CircularProgress />
@@ -162,11 +205,7 @@ const Payment = () => {
                 alignItems: 'start',
                 maxWidth: '100%',
             }}>
-                {error && (
-                    <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
-                        {error}
-                    </Alert>
-                )}
+               
 
                 {/* Address Section */}
                 <Grid container spacing={3}>
@@ -196,7 +235,7 @@ const Payment = () => {
                             <Grid container spacing={2} direction={{ xs: "column", sm: "row" }}>
                                 <Grid item xs={4}>
                                     <Typography variant="body1">
-                                        {userData?.name || 'ไม่พบชื่อ'}
+                                        {userData?.name || 'Name not found'}
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={8}>
@@ -204,14 +243,14 @@ const Payment = () => {
                                         <Typography variant="body1">{userData.address}</Typography>
                                     ) : (
                                         <Typography variant="body2" color="text.secondary">
-                                            ไม่พบข้อมูลที่อยู่
+                                            Address not found
                                         </Typography>
                                     )}
                                 </Grid>
                             </Grid>
 
                             <Typography variant="body2" color="text.secondary">
-                                {userData?.phone_number || 'ไม่พบเบอร์โทร'}
+                                {userData?.phone_number || 'Tel not found'}
                             </Typography>
                         </Paper>
                     </Grid>
@@ -348,6 +387,46 @@ const Payment = () => {
                     </Grid>
                 </Grid>
             </Box>
+
+            
+            {/* Snackbar section */}
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+            >
+                <Alert severity={snackbar.severity} sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
+
+
+             {/* Dialog section */}
+             <Dialog 
+             open={openDialog} onClose={handleDialogClose}
+                    PaperProps={{
+                        sx: {
+                            borderRadius: '16px',
+                            width: '100%',
+                            maxWidth: '400px',
+                            p: 2,
+                            textAlign: 'center',
+                        }
+                    }}
+            
+           >
+                <DialogTitle>Session Expired</DialogTitle>
+                <DialogContent>
+                    <Typography>You have been logged out due to inactivity. Please log in again.</Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleDialogClose} variant="contained"  sx={{  backgroundColor: 'text.primary',
+                                        color: 'primary.main'}}>
+                        Log In Again
+                    </Button>
+
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 };
