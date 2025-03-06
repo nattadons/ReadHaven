@@ -17,6 +17,7 @@ import TestImage from './pages/TestImage';
 import Payment from './pages/Payment';
 import Cart from './pages/Cart';
 import MyAccountAdmin from './pages/MyAccountAdmin';
+import PaymentComponent from './components/PaymentComponent'; // Import the PaymentComponent component
 
 
 
@@ -48,6 +49,8 @@ function App() {
             <Route path="/payment" element={<Payment />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/myaccountadmin" element={<MyAccountAdmin />} />
+            <Route path="/paymentcomponent" element={<PaymentComponent />} /> {/* Add this route */}
+           
             {/* Add other routes here */}
           </Routes>
         </div>

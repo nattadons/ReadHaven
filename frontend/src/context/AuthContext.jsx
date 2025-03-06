@@ -7,17 +7,17 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [userId, setUserId] = useState(null);
+    
     const navigate = useNavigate();
 
     useEffect(() => {
         // 🔹 โหลดค่าจาก localStorage เมื่อหน้าโหลด
-        const storedUserId = localStorage.getItem('userId');
+        
         const loggedInStatus = JSON.parse(localStorage.getItem('isLoggedIn') || 'false');
       
-        if (storedUserId && loggedInStatus) {
+        if (loggedInStatus) {
            
-            setUserId(storedUserId);
+            
             setIsLoggedIn(loggedInStatus);
         }
       
@@ -28,24 +28,24 @@ export const AuthProvider = ({ children }) => {
    
      // 🔹 อัปเดต localStorage ทุกครั้งที่ state เปลี่ยน
      useEffect(() => {
-        if (isLoggedIn && userId) {
-            localStorage.setItem('userId', userId);
+        if (isLoggedIn) {
+            
             localStorage.setItem('isLoggedIn', isLoggedIn);
         } else {
             localStorage.removeItem('isLoggedIn');
-            localStorage.removeItem('userId');
+           
         }
        
-    }, [isLoggedIn, userId]); // อัปเดตทุกครั้งที่ค่าเปลี่ยน
+    }, [isLoggedIn]); // อัปเดตทุกครั้งที่ค่าเปลี่ยน
 
     
 
-    const login = (userId) => {
+    const login = () => {
         
-        setUserId(userId);
+      
         setIsLoggedIn(true);
         localStorage.setItem('isLoggedIn', 'true');
-        localStorage.setItem('userId', userId);
+        
         navigate('/book');
      
     };
@@ -58,10 +58,10 @@ export const AuthProvider = ({ children }) => {
             
             if (response.status === 200) {
                 // ล้าง state และ localStorage หลังจาก API call สำเร็จ
-                setUserId(null);
+              
                 setIsLoggedIn(false);
                 localStorage.removeItem('isLoggedIn');
-                localStorage.removeItem('userId');
+         
                 return true; // ส่งค่ากลับเพื่อให้รู้ว่า logout สำเร็จ
             }
             return false;
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ isLoggedIn, userId, login, logout }}>
+        <AuthContext.Provider value={{ isLoggedIn, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,6 +1,6 @@
 const express = require('express');
 const {
-  getAllUsers,
+  getUsers,
   createUser,
   loginUser,
   loginWithGoogle,// ฟังก์ชันที่สร้างผู้ใช้จาก Google
@@ -14,7 +14,7 @@ const verifyToken = require('../middleware/authMiddleware'); // Import Middlewar
 const router = express.Router();
 
 // GET: ดึงข้อมูลผู้ใช้ทั้งหมด (ต้องการ JWT)
-router.get('/', verifyToken, getAllUsers);
+router.get('/', verifyToken, getUsers);
 
 // POST: สร้างผู้ใช้ใหม่ (Signup)
 router.post('/signup', createUser);

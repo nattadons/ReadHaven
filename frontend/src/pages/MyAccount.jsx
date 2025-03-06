@@ -13,7 +13,7 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    
+
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -34,7 +34,7 @@ const MyAccount = () => {
         latitude: null,
         longitude: null
     });
-    
+
     // Validation errors
     const [errors, setErrors] = useState({
         name: '',
@@ -64,7 +64,7 @@ const MyAccount = () => {
     const fetchUserData = async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/`, {
-               withCredentials: true,
+                withCredentials: true,
             });
             setUser(prevUser => ({
                 ...prevUser,
@@ -85,14 +85,12 @@ const MyAccount = () => {
     };
 
     const handleDialogClose = () => {
-        logout(); 
+        logout();
         navigate('/login');
         setOpenDialog(false);
     };
-    
-    if (user?.role === 'admin') {
-        return <MyAccountAdmin />;
-    }
+
+
 
     const handleEdit = () => {
         setIsEditing(true);
@@ -195,7 +193,7 @@ const MyAccount = () => {
                 `${import.meta.env.VITE_API_URL}/users/update`,
                 updates,
                 {
-                   withCredentials: true,
+                    withCredentials: true,
                 }
             );
 
@@ -230,7 +228,7 @@ const MyAccount = () => {
 
         return (
             <Box sx={{ width: '100%', mt: 2 }}>
-                <LeafMapApi 
+                <LeafMapApi
                     onLocationUpdate={handleLocationUpdate}
                     initialLocation={{
                         latitude: user.latitude,
@@ -384,8 +382,8 @@ const MyAccount = () => {
                                     type="email"
                                     disabled={!isEditing || Boolean(user.googleId)}
                                     error={!!errors.email && isEditing && !user.googleId}
-                                    helperText={(isEditing && !user.googleId && errors.email) || 
-                                              (user.googleId && "Email cannot be edited for Google accounts")}
+                                    helperText={(isEditing && !user.googleId && errors.email) ||
+                                        (user.googleId && "Email cannot be edited for Google accounts")}
                                     sx={{
                                         '& .MuiInputBase-input.Mui-disabled': {
                                             bgcolor: 'action.hover',
@@ -406,6 +404,11 @@ const MyAccount = () => {
                 </Box>
             </Paper>
 
+            {/* แสดง UI สำหรับ Admin ถ้าเป็นผู้ใช้ Admin */}
+            {user?.role === 'admin' && (
+                <MyAccountAdmin />
+            )}
+
             {/* Snackbar section */}
             <Snackbar
                 open={snackbar.open}
@@ -416,10 +419,10 @@ const MyAccount = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
-                                    
+
             {/* Dialog section */}
-            <Dialog 
-                open={openDialog} 
+            <Dialog
+                open={openDialog}
                 onClose={handleDialogClose}
                 PaperProps={{
                     sx: {
