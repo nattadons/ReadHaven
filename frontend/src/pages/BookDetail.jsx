@@ -56,11 +56,12 @@ const BookDetail = () => {
 
             const checkoutData = {
                 items: [{
-                    id: book.id,
+                    productId: book._id,
                     name: book.name,
                     price: book.price,
                     quantity: 1,
-                    image_product: book.image_product
+                    image_product: book.image_product,
+                    description: book.detail
                 }],
                 totalAmount: book.price,
                 timestamp: new Date().getTime()

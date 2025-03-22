@@ -13,6 +13,8 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
+    Tabs,
+    Tab
 
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
@@ -21,7 +23,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import LeafMapApi from '../components/LeafMapApi';
-import MyAccountAdmin from './MyAccountAdmin';
+import MyAccountAdmin from './Admin/MyAccountAdmin';
 import { useAuth } from '../context/AuthContext';
 
 const MyAccount = () => {
@@ -54,6 +56,7 @@ const MyAccount = () => {
 
     const { isLoggedIn, logout } = useAuth();
     const navigate = useNavigate();
+    const [tabIndex, setTabIndex] = useState(0); // 0 สำหรับ "My Account", 1 สำหรับ "Order"
 
     useEffect(() => {
         if (isLoggedIn) {
@@ -239,19 +242,25 @@ const MyAccount = () => {
         );
     };
 
+
+
+    const handleTabChange = (event, newIndex) => {
+        setTabIndex(newIndex);
+    };
+
     return (
         <Container maxWidth="lg">
-            <Box sx={{ mb: 4, mt: '100px' }}>
-                <Typography
-                    component="span"
-                    sx={{
-                        fontWeight: 'bold',
-                        mr: 3
-                    }}
-                >
-                    My Account
-                </Typography>
+            <Box sx={{ mb: 4, mt: '100px',borderBottom: 1, borderColor: 'divider'  }}>
+          
+
+            <Tabs value={tabIndex} onChange={handleTabChange} aria-label="my-account-tabs">
+                <Tab label="My Account" />
+                {user?.role === 'admin' && <Tab label="Customer Order" onClick={() => navigate('/checkorder')} />}
+                {user?.role === 'user' && <Tab label="Order Tracking" onClick={() => navigate('/tracking')} />}
+            </Tabs>
+              
             </Box>
+           
 
             <Paper
                 elevation={0}

@@ -8,8 +8,8 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 
-// ดึงข้อมูลผู้ใช้ทั้งหมด
-exports.getUsers = async (req, res) => {
+// ดึงข้อมูลผู้ใช้ตาม ID
+exports.getUser = async (req, res) => {
   try {
     const userId = req.user.userId;  // ใช้ userId ที่ได้จาก token
 
@@ -24,6 +24,23 @@ exports.getUsers = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+// ดึงข้อมูลผู้ใช้ทั้งหมด
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await Users.find(); // ดึงข้อมูลผู้ใช้ทั้งหมดจากฐานข้อมูล
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: 'No users found' });
+    }
+
+    res.status(200).json(users); // ส่งข้อมูลผู้ใช้ทั้งหมดกลับ
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 // สร้างผู้ใช้ใหม่ (Signup)
 exports.createUser = async (req, res) => {

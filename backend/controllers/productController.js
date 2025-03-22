@@ -15,14 +15,64 @@ const FOLDER_ID = process.env.FOLDER_ID; // รหัสโฟลเดอร์
 
 
 // ดึงข้อมูลสินค้าทั้งหมด
+// Get products with pagination
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Products.find();
-    res.status(200).json(products);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 6;
+    const skip = (page - 1) * limit;
+    
+    // Get total count of products
+    const totalProducts = await Products.countDocuments();
+    
+    // Get products for current page
+    const products = await Products.find()
+      .skip(skip)
+      .limit(limit);
+    
+    res.status(200).json({
+      products,
+      pagination: {
+        totalProducts,
+        totalPages: Math.ceil(totalProducts / limit),
+        currentPage: page,
+        limit
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+
+// ดึงข้อมูลสินค้าตามรายการ ID
+exports.getProductsByOrder = async (req, res) => {
+  try {
+    const ids = req.query.ids; // ดึง IDs จาก query string
+    
+    if (!ids) {
+      return res.status(400).json({ message: 'No product IDs provided' });
+    }
+
+    const productIds = Array.isArray(ids) ? ids : ids.split(','); // แปลงเป็นอาเรย์ถ้าเป็น String
+
+    const products = await Products.find({ _id: { $in: productIds } });
+
+    if (products.length === 0) {
+      return res.status(404).json({ message: 'No products found' });
+    }
+
+    res.status(200).json({ products });
+  } catch (err) {
+    console.error('Error fetching products by IDs:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+
+
 
 // ดึงข้อมูลสินค้าตาม ID
 exports.getProductById = async (req, res) => {

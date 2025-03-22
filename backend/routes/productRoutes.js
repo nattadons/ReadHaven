@@ -2,6 +2,7 @@ const express = require('express');
 const {
   getAllProducts,
   getProductById,
+  getProductsByOrder,
   getRecommendedProducts,
   addProduct,
   updateProduct,
@@ -46,6 +47,8 @@ router.get('/', getAllProducts);
 
 // GET: ดึงข้อมูลสินค้าตาม ID
 router.get('/products/:id', getProductById);
+// GET: ดึงข้อมูลสินค้าตาม ID
+router.get('/orders',  getProductsByOrder,);
 
 // GET: ดึงหนังสือแนะนำ
 router.get('/products/:id/recommended', getRecommendedProducts);

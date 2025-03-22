@@ -119,8 +119,9 @@ const Cart = () => {
                 items: cartItems,
                 totalAmount: total,
                 timestamp: new Date().getTime()
-            };
-
+            };  
+            console.log('cartitem',cartItems)
+            console.log('checkoutData',checkoutData)
             sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
 
             navigate('/payment', {

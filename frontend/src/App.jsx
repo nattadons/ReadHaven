@@ -16,10 +16,10 @@ import BookDetail from './pages/BookDetail';
 import TestImage from './pages/TestImage';
 import Payment from './pages/Payment';
 import Cart from './pages/Cart';
-import MyAccountAdmin from './pages/MyAccountAdmin';
-import PaymentComponent from './components/PaymentComponent'; // Import the PaymentComponent component
-
-
+import MyAccountAdmin from './pages/Admin/MyAccountAdmin.jsx';
+import CompletePage from './components/CompletePage.jsx';
+import OrderAdmin from './pages/Admin/OrderAdmin.jsx';
+import TrackingOders from './pages/TrackingOders.jsx';
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
 const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
@@ -49,7 +49,10 @@ function App() {
             <Route path="/payment" element={<Payment />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/myaccountadmin" element={<MyAccountAdmin />} />
-            <Route path="/paymentcomponent" element={<PaymentComponent />} /> {/* Add this route */}
+            <Route path="/complete" element={<CompletePage />} /> 
+            <Route path="/checkorder" element={<OrderAdmin/>} />
+            <Route path="/tracking" element={<TrackingOders/>}/>
+            
            
             {/* Add other routes here */}
           </Routes>

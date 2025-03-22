@@ -5,8 +5,8 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, DialogContentText, C
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
-import MediaCard from '../components/Card';
-import Search from '../components/Search';
+import MediaCard from '../../components/Card';
+import Search from '../../components/Search';
 import Pagination from '@mui/material/Pagination';
 
 const MyAccountAdmin = () => {
@@ -15,6 +15,7 @@ const MyAccountAdmin = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [isEditing, setIsEditing] = useState(false);
     const [selectedBook, setSelectedBook] = useState(null);
+
     // เพิ่ม state สำหรับ dialog ยืนยันการลบและบันทึก
     const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
     const [bookToDelete, setBookToDelete] = useState(null);
@@ -33,7 +34,8 @@ const MyAccountAdmin = () => {
     });
 
     const [currentPage, setCurrentPage] = useState(1);
-    const booksPerPage = 8; // You can adjust this number based on your preference
+    const [totalPages, setTotalPages] = useState(1);
+    const booksPerPage = 8; // Keep your existing value
 
     useEffect(() => {
         fetchBooks();
@@ -43,14 +45,21 @@ const MyAccountAdmin = () => {
         }
     }, []);
 
-    const fetchBooks = async () => {
+    // Update fetchBooks to include pagination
+    const fetchBooks = async (page = 1) => {
+        setLoading(true);
         try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/products`, {
+            const response = await axios.get(`${import.meta.env.VITE_API_URL}/products?page=${page}&limit=${booksPerPage}`, {
                 withCredentials: true,
             });
-            setBooks(response.data);
+            setBooks(response.data.products);
+            setTotalPages(response.data.pagination.totalPages);
+            setCurrentPage(page);
         } catch (error) {
             console.error('Error fetching books:', error);
+            setBooks([]);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -58,10 +67,35 @@ const MyAccountAdmin = () => {
         setSearchQuery(query);
         localStorage.setItem('adminSearchQuery', query);
         setCurrentPage(1);
+
+        if (query) {
+            // When searching, we might need to fetch all products first
+            axios.get(`${import.meta.env.VITE_API_URL}/products`, {
+                withCredentials: true,
+            })
+                .then((response) => {
+                    const allProducts = response.data.products || [];
+                    const filtered = allProducts.filter(
+                        (book) =>
+                            book.name.toLowerCase().includes(query.toLowerCase()) ||
+                            (book.author && book.author.toLowerCase().includes(query.toLowerCase()))
+                    );
+                    setBooks(filtered);
+                })
+                .catch((error) => {
+                    console.error('Error fetching data for search:', error);
+                    setBooks([]);
+                });
+        } else {
+            // If search is cleared, get regular paginated results
+            fetchBooks(1);
+        }
     };
 
+    // Update the page change handler
     const handlePageChange = (event, page) => {
         setCurrentPage(page);
+        fetchBooks(page);
     };
 
     const filteredBooks = books.filter(
@@ -70,23 +104,27 @@ const MyAccountAdmin = () => {
             (book.author && book.author.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
-    const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
-    const startIndex = (currentPage - 1) * booksPerPage;
-    const endIndex = startIndex + booksPerPage;
-    const displayedBooks = filteredBooks.slice(startIndex, endIndex);
+    
+    const displayedBooks = searchQuery
+        ? filteredBooks.slice((currentPage - 1) * booksPerPage, currentPage * booksPerPage)
+        : books; // If not searching, books already contains the right page from the server
 
+        
     const handleBookChange = (e) => {
         const { name, value, files } = e.target;
         if (name === 'image_product' && files) {
 
-            // สร้าง URL ตัวอย่างสำหรับรูปภาพที่เลือก
+            if (filePreview?.url) {
+                URL.revokeObjectURL(filePreview.url); // เคลียร์ URL เก่าก่อน
+            }
+        
             const previewUrl = URL.createObjectURL(files[0]);
             setFilePreview({
                 name: files[0].name,
                 size: files[0].size,
                 url: previewUrl
             });
-
+        
             setNewBook({ ...newBook, [name]: files[0] });
         } else {
             setNewBook({ ...newBook, [name]: value });
@@ -237,7 +275,7 @@ const MyAccountAdmin = () => {
     // ล้าง URL objects เพื่อหลีกเลี่ยงการรั่วไหลของหน่วยความจำ
     useEffect(() => {
         return () => {
-            if (filePreview && filePreview.url) {
+            if (filePreview?.url){
                 URL.revokeObjectURL(filePreview.url);
             }
         };
@@ -298,6 +336,9 @@ const MyAccountAdmin = () => {
                                 color="error"
                                 startIcon={<DeleteIcon />}
                                 onClick={() => handleDeleteConfirmation(book)}
+                                sx={{ minWidth: '100px' }}
+
+
                             >
                                 Delete
                             </Button>
@@ -306,6 +347,7 @@ const MyAccountAdmin = () => {
                                 color="text.primary"
                                 startIcon={<EditIcon />}
                                 onClick={() => handleEditBook(book)}
+                                sx={{ minWidth: '100px' }}
                             >
                                 Edit
                             </Button>
@@ -316,7 +358,7 @@ const MyAccountAdmin = () => {
 
 
 
-           
+
             {totalPages > 1 && (
                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
                     <Pagination
