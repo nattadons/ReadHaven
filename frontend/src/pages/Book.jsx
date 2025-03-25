@@ -7,100 +7,86 @@ import axios from 'axios';
 import MediaCard from '../components/Card';
 
 const Book = () => {
-  const [books, setBooks] = useState([]); // store books from API
-  const [searchQuery, setSearchQuery] = useState(''); // search query
-  const [currentPage, setCurrentPage] = useState(1); // current pagination page
-  const [totalPages, setTotalPages] = useState(1); // total pages
-  const [loading, setLoading] = useState(true); // loading state
-  const booksPerPage = 6; // books per page
+  const [books, setBooks] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('All'); // เพิ่มสถานะสำหรับหมวดหมู่ที่เลือก
+  const booksPerPage = 6;
 
-  // Function to fetch books with pagination
-  const fetchBooks = async (page = 1, search = '') => {
-    setLoading(true);
-    try {
-      let url = `${import.meta.env.VITE_API_URL}/products?page=${page}&limit=${booksPerPage}`;
-      
-      // If there's a search query, we could handle it in different ways:
-      // 1. Send it to the backend and filter there (requires backend implementation)
-      // 2. Get all results and filter in the frontend (not ideal for large datasets)
-      
-      // For now, we'll implement frontend filtering when searching
-      const response = await axios.get(url);
-      
-      if (search) {
-        // Filter results on the frontend for search
-        // Note: In a real app, you'd want to handle search on the backend for better performance
-        const filtered = response.data.products.filter(
-          (book) =>
-            book.name.toLowerCase().includes(search.toLowerCase()) ||
-            (book.author && book.author.toLowerCase().includes(search.toLowerCase()))
-        );
-        setBooks(filtered);
-        // For this example, we're not updating pagination for search results
-      } else {
-        setBooks(response.data.products);
-        setTotalPages(response.data.pagination.totalPages);
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
+  // ฟังก์ชั่นดึงข้อมูลหนังสือ
+  // แก้ไขฟังก์ชัน fetchBooks ใน Book.jsx
+const fetchBooks = async (page = 1, search = '', category = 'All') => {
+  setLoading(true);
+  try {
+    // สร้าง URL พื้นฐาน
+    let url = `${import.meta.env.VITE_API_URL}/products?page=${page}&limit=${booksPerPage}`;
+    
+    // เพิ่มพารามิเตอร์สำหรับหมวดหมู่
+    if (category !== 'All') {
+      url += `&type=${category}`;
     }
-  };
+    
+    // เพิ่มพารามิเตอร์สำหรับการค้นหา
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
+    
+    const response = await axios.get(url);
+    setBooks(response.data.products);
+    setTotalPages(response.data.pagination.totalPages);
+  } catch (error) {
+    console.error('Error fetching data:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
+  // ปรับปรุง useEffect เมื่อโหลดครั้งแรก และลบโค้ดที่ไม่จำเป็น
   useEffect(() => {
-    // Load saved search query from localStorage
+    // โหลดเฉพาะ searchQuery จาก localStorage
     const savedSearchQuery = localStorage.getItem('searchQuery') || '';
+    
+    // ตั้งค่า state
     setSearchQuery(savedSearchQuery);
+    setSelectedCategory('All'); // กำหนดให้เป็น 'All' เสมอเมื่อโหลดหน้าใหม่
     
-    // Fetch books on initial load
-    fetchBooks(1, savedSearchQuery);
+    // ดึงข้อมูลเมื่อโหลดครั้งแรกด้วยหมวดหมู่ 'All'
+    fetchBooks(1, savedSearchQuery, 'All');
   }, []);
-
-  useEffect(() => {
-    // When current page changes, fetch new data
-    if (!searchQuery) {
-      fetchBooks(currentPage);
-    }
-  }, [currentPage]);
-
-  const handleSearch = (query) => {
-    setSearchQuery(query);
-    localStorage.setItem('searchQuery', query);
-    setCurrentPage(1); // Reset to page 1 when searching
-    
-    if (query) {
-      // When searching, fetch all results and filter on frontend
-      // This is a temporary solution; a better approach would be server-side search
-      axios.get(`${import.meta.env.VITE_API_URL}/products`)
-        .then((response) => {
-          const filtered = response.data.products.filter(
-            (book) =>
-              book.name.toLowerCase().includes(query.toLowerCase()) ||
-              (book.author && book.author.toLowerCase().includes(query.toLowerCase()))
-          );
-          setBooks(filtered);
-          setTotalPages(Math.ceil(filtered.length / booksPerPage));
-        })
-        .catch((error) => {
-          console.error('Error fetching data for search:', error);
-        });
-    } else {
-      // If search is cleared, get regular paginated results
-      fetchBooks(1);
-    }
-  };
+ 
+  // แก้ไขฟังก์ชัน handleSearch
+const handleSearch = (query) => {
+  setSearchQuery(query);
+  localStorage.setItem('searchQuery', query);
+  setCurrentPage(1); // รีเซ็ตกลับไปหน้า 1 เมื่อค้นหา
   
-  const handlePageChange = (event, page) => {
-    setCurrentPage(page);
-  };
+  // ดึงข้อมูลใหม่โดยส่งคำค้นหาไปด้วย
+  fetchBooks(1, query, selectedCategory);
+};
 
+  
+const handlePageChange = (event, page) => {
+  setCurrentPage(page);
+  fetchBooks(page, searchQuery, selectedCategory);
+};
+  
+  // เพิ่มฟังก์ชันจัดการเมื่อเปลี่ยนหมวดหมู่
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+    localStorage.setItem('selectedCategory', category);
+    setCurrentPage(1); // รีเซ็ตกลับไปหน้า 1 เมื่อเปลี่ยนหมวดหมู่
+    
+    // ดึงข้อมูลใหม่พร้อมกับส่งคำค้นหาและหมวดหมู่ไปด้วย
+    fetchBooks(1, searchQuery, category);
+  };
   return (
     <Container maxWidth="lg">
       <Box sx={{ mt: '100px', mb: '300px', mx: '50px', display: 'flex', flexDirection: 'column', alignItems: 'center', maxWidth: '100%' }}>
         <Grid container spacing={2} sx={{ alignItems: 'center', mb: '32px' }}>
           <Grid item xs={12} sm={6}>
-            <Tab />
+            <Tab onCategoryChange={handleCategoryChange} selectedCategory={selectedCategory} />
           </Grid>
           <Grid item xs={12} sm={6}>
             <Search onSearch={handleSearch} searchQuery={searchQuery} />
@@ -109,11 +95,11 @@ const Book = () => {
 
         <Box sx={{ mb: '100px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', width: '100%' }}>
           <Typography fontWeight="medium" fontSize="20px">
-            Categories
+            {selectedCategory === 'All' ? 'All' : `${selectedCategory}`}
           </Typography>
           
           {loading ? (
-            <Typography>Loading...</Typography>
+            <Typography>กำลังโหลด...</Typography>
           ) : (
             <Grid container spacing={3} sx={{ mt: '32px' }}>
               {books.length > 0 ? (
@@ -124,7 +110,7 @@ const Book = () => {
                 ))
               ) : (
                 <Grid item xs={12}>
-                  <Typography>No books found.</Typography>
+                  <Typography>Not Found</Typography>
                 </Grid>
               )}
             </Grid>

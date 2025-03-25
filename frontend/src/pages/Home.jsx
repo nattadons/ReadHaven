@@ -11,7 +11,7 @@ const Home =  () => {
 
 
   const Test = () => {
-    navigate('/testimage');
+    navigate('/book');
   
 };
 

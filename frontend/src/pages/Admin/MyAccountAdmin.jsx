@@ -27,6 +27,7 @@ const MyAccountAdmin = () => {
     const [newBook, setNewBook] = useState({
         name: '',
         author: '',
+        type: '',
         price: '',
         detail: '',
         overview: '',
@@ -207,6 +208,7 @@ const MyAccountAdmin = () => {
         setNewBook({
             name: book.name || '',
             author: book.author || '',
+            type: book.type || '',
             price: book.price || '',
             detail: book.detail || '',
             overview: book.overview || '',
@@ -268,7 +270,7 @@ const MyAccountAdmin = () => {
         setIsEditing(false);
         setSelectedBook(null);
         // [ปรับปรุง 5] เพิ่ม overview ในการ reset สถานะ newBook เมื่อปิด dialog
-        setNewBook({ name: '', author: '', price: '', detail: '', overview: '', image_product: '' });
+        setNewBook({ name: '', author: '', type: '', price: '', detail: '', overview: '', image_product: '' });
         setFilePreview(null); // ล้างตัวอย่างไฟล์
     };
 
@@ -414,6 +416,27 @@ const MyAccountAdmin = () => {
                                 value={newBook.author}
                                 onChange={handleBookChange}
                                 placeholder="Author"
+                                style={{
+                                    width: '100%',
+                                    padding: '10px',
+                                    border: '1px solid #ccc',
+                                    borderRadius: '4px',
+                                    fontSize: '16px',
+                                    boxSizing: 'border-box'
+                                }}
+                            />
+                        </Box>
+                          {/* type Field */}
+                          <Box sx={{ mb: 3, width: '100%' }} >
+                            <Typography variant="body1" sx={{ mb: 1, fontWeight: 'medium' }}>
+                                Type
+                            </Typography>
+                            <input
+                                type="text"
+                                name="type"
+                                value={newBook.type}
+                                onChange={handleBookChange}
+                                placeholder="Type"
                                 style={{
                                     width: '100%',
                                     padding: '10px',

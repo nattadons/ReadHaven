@@ -16,20 +16,41 @@ const FOLDER_ID = process.env.FOLDER_ID; // รหัสโฟลเดอร์
 
 // ดึงข้อมูลสินค้าทั้งหมด
 // Get products with pagination
+// ดึงข้อมูลสินค้าทั้งหมด
+// แก้ไขฟังก์ชัน getAllProducts ในไฟล์ productController.js
 exports.getAllProducts = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 6;
     const skip = (page - 1) * limit;
+    const type = req.query.type; // รับค่าหมวดหมู่จาก query string
+    const search = req.query.search || ''; // เพิ่มการรับค่า search
+
+    // สร้างเงื่อนไขการค้นหา
+    let query = {};
     
-    // Get total count of products
-    const totalProducts = await Products.countDocuments();
+    // ถ้ามีการระบุหมวดหมู่
+    if (type && type !== 'All') {
+      query.type = type;
+    }
     
-    // Get products for current page
-    const products = await Products.find()
+    // ถ้ามีการค้นหา ให้เพิ่มเงื่อนไขในการค้นหา
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },  // ค้นหาจากชื่อ (case insensitive)
+        { author: { $regex: search, $options: 'i' } } // ค้นหาจากชื่อผู้แต่ง (case insensitive)
+      ];
+    }
+
+    // นับจำนวนสินค้าทั้งหมดตามเงื่อนไข
+    const totalProducts = await Products.countDocuments(query);
+
+    // ดึงสินค้าสำหรับหน้าปัจจุบันตามเงื่อนไข
+    const products = await Products.find(query)
       .skip(skip)
-      .limit(limit);
-    
+      .limit(limit)
+      .sort({ _id: -1 });
+
     res.status(200).json({
       products,
       pagination: {
@@ -50,7 +71,7 @@ exports.getAllProducts = async (req, res) => {
 exports.getProductsByOrder = async (req, res) => {
   try {
     const ids = req.query.ids; // ดึง IDs จาก query string
-    
+
     if (!ids) {
       return res.status(400).json({ message: 'No product IDs provided' });
     }
@@ -87,20 +108,39 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// เพิ่มฟังก์ชันดึงหนังสือแนะนำ
 exports.getRecommendedProducts = async (req, res) => {
   try {
-    // ดึงหนังสือมา 3 เล่มที่ไม่ใช่เล่มปัจจุบัน
     const currentProductId = req.params.id;
-    const recommendedProducts = await Products.find(
-      { _id: { $ne: currentProductId } }
-    ).limit(3);
     
+    // ดึงข้อมูลของหนังสือที่กำลังแสดงอยู่
+    const currentProduct = await Products.findById(currentProductId);
+    
+    // ถ้าหากไม่พบหนังสือปัจจุบัน ให้ส่งข้อผิดพลาด
+    if (!currentProduct) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // ดึงหนังสือที่มีประเภทเดียวกันและไม่ใช่หนังสือปัจจุบัน
+    let recommendedProducts = await Products.find(
+      { 
+        _id: { $ne: currentProductId },   // ไม่ให้แสดงหนังสือปัจจุบัน
+        type: currentProduct.type         // มีประเภทเดียวกับหนังสือปัจจุบัน
+      }
+    ).limit(3);  // จำกัดจำนวนหนังสือที่แนะนำ
+
+    // ถ้าไม่พบหนังสือที่มีประเภทเดียวกัน ให้แสดงหนังสือที่อัปเดตล่าสุด 3 เล่ม
+    if (recommendedProducts.length === 0) {
+      recommendedProducts = await Products.find()
+        .sort({ _id: -1 })  // จัดเรียงตามวันที่อัปเดตล่าสุด
+        .limit(3);  // จำกัดจำนวนหนังสือที่แนะนำ
+    }
+
     res.status(200).json(recommendedProducts);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 
@@ -121,15 +161,15 @@ async function uploadToDrive(file) {
       },
       fields: "id,name,webViewLink" // เพิ่ม webViewLink เพื่อรับลิงก์เข้าถึง
     });
-    
+
     // สร้าง URL สำหรับเข้าถึงไฟล์
     const fileUrl = `https://drive.google.com/thumbnail?id=${data.id}&sz=w1000`;
-    
+
     console.log(`File uploaded successfully to Google Drive -> ${JSON.stringify(data)}`);
-    
+
     // ลบไฟล์ชั่วคราวหลังจากอัพโหลดสำเร็จ
     fs.unlinkSync(file.path);
-    
+
     return { fileId: data.id, fileName: data.name, fileUrl };
   } catch (error) {
     console.error("Error uploading to Google Drive:", error);
@@ -144,11 +184,11 @@ async function uploadToDrive(file) {
 // เพิ่มสินค้าใหม่พร้อมอัพโหลดรูปภาพไป Google Drive
 exports.addProduct = async (req, res) => {
   try {
-   
-    
-    const { name, author, price, detail, overview } = req.body;
+
+
+    const { name, author, type,price, detail, overview } = req.body;
     let image_product = "";
-    
+
     // ถ้ามีไฟล์รูปภาพ ให้อัพโหลดไป Google Drive ก่อน
     if (req.file) {
       try {
@@ -161,17 +201,18 @@ exports.addProduct = async (req, res) => {
         return res.status(500).json({ error: "Upload to Google Drive failed" });
       }
     }
-    
+
     // สร้างสินค้าใหม่โดยใช้ลิงก์ของรูปภาพจาก Google Drive
     const newProduct = new Products({
       name,
       author,
+      type,
       price,
       detail,
       overview,
       image_product // เก็บลิงก์รูปภาพจาก Google Drive
     });
-    
+
     const savedProduct = await newProduct.save();
     res.status(201).json(savedProduct);
   } catch (err) {
@@ -183,23 +224,24 @@ exports.addProduct = async (req, res) => {
 // อัพเดทสินค้า
 exports.updateProduct = async (req, res) => {
   try {
-   
-    
-    const { name, author, price, detail, overview } = req.body;
+
+
+    const { name, author, type, price, detail, overview } = req.body;
     const updates = {
       name,
       author,
+      type,
       price,
       detail,
       overview
     };
-    
+
     // ค้นหาข้อมูลสินค้าเดิมก่อนอัพเดท
     const product = await Products.findById(req.params.id);
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    
+
     // ถ้ามีการอัพโหลดไฟล์รูปภาพใหม่
     if (req.file) {
       try {
@@ -207,7 +249,7 @@ exports.updateProduct = async (req, res) => {
         const driveUploadResult = await uploadToDrive(req.file);
         updates.image_product = driveUploadResult.fileUrl;
         console.log("Upload Google Drive success:", driveUploadResult);
-        
+
         // ลบรูปภาพเก่าจาก Google Drive ถ้ามี
         if (product.image_product) {
           try {
@@ -226,14 +268,14 @@ exports.updateProduct = async (req, res) => {
         return res.status(500).json({ error: "Could not upload new image" });
       }
     }
-    
+
     // อัพเดทข้อมูลสินค้าใน MongoDB
     const updatedProduct = await Products.findByIdAndUpdate(
       req.params.id,
       updates,
       { new: true }
     );
-    
+
     res.status(200).json(updatedProduct);
   } catch (err) {
     console.error("Could not update product:", err);
@@ -249,20 +291,20 @@ async function deleteFromDrive(fileUrl) {
     // แยก fileId จาก URL ของรูปภาพ
     const urlPattern = /id=([^&]+)/;
     const match = fileUrl.match(urlPattern);
-    
+
     if (!match || !match[1]) {
       console.error("Not found fileID in link:", fileUrl);
       return false;
     }
-    
+
     const fileId = match[1];
     const drive = google.drive({ version: "v3", auth: auth });
-    
+
     // ลบไฟล์จาก Google Drive ด้วย fileId
     await drive.files.delete({
       fileId: fileId
     });
-    
+
     console.log(`Deleted file in Google Drive success: ${fileId}`);
     return true;
   } catch (error) {
@@ -277,11 +319,11 @@ async function deleteFromDrive(fileUrl) {
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Products.findById(req.params.id);
-    
+
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    
+
     // ลบรูปภาพจาก Google Drive ถ้ามี
     if (product.image_product) {
       try {
@@ -289,14 +331,14 @@ exports.deleteProduct = async (req, res) => {
         if (deleteResult) {
           console.log("Deleted image from Google Drive success");
         } else {
-          console.warn("Could not delete image from Google Drive"); 
+          console.warn("Could not delete image from Google Drive");
         }
       } catch (deleteError) {
         console.error("Error to delete image from Google Drive:", deleteError);
         // ลบผลิตภัณฑ์จาก MongoDB ถึงแม้จะลบรูปจาก Drive ไม่สำเร็จ
       }
     }
-    
+
     // ลบผลิตภัณฑ์จาก MongoDB
     await Products.findByIdAndDelete(req.params.id);
     res.status(200).json({ message: 'Deleted product success' });

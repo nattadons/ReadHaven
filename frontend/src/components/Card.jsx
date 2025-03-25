@@ -64,6 +64,7 @@ MediaCard.propTypes = {
         _id: PropTypes.string.isRequired,
         name: PropTypes.string.isRequired,
         author: PropTypes.string,
+        type: PropTypes.string,
         price: PropTypes.number,
         detail: PropTypes.string,
         overview: PropTypes.string,

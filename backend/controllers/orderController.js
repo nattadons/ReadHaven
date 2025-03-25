@@ -1,7 +1,7 @@
 require('dotenv').config();
 const Order = require('../models/order'); 
 const Product = require('../models/product'); 
-const stripe = require('stripe')(process.env.SK_TEST);
+const stripe = require('stripe')(process.env.SK_LIVE);
 
 // สร้างคำสั่งซื้อ
 const createOrder = async (req, res) => {

@@ -1,5 +1,5 @@
 require('dotenv').config(); // โหลดค่าใน .env
-const stripe_secret_key = process.env.SK_TEST; // นำค่า Secret Key จาก .env
+const stripe_secret_key = process.env.SK_LIVE; // นำค่า Secret Key จาก .env
 const stripe = require('stripe')(stripe_secret_key);
 
 const calculateOrderAmount = (items) => {
