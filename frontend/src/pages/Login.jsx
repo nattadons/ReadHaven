@@ -2,7 +2,7 @@ import { useState, } from 'react';
 import { Box, Container, Button, Typography, Grid, Link, IconButton, InputAdornment, FormControl, InputLabel, OutlinedInput, TextField } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-import FacebookLogo from '../assets/icons/facebook.png';
+
 
 import axios from 'axios';
 import Visibility from '@mui/icons-material/Visibility';
@@ -169,14 +169,7 @@ const Login = () => {
 
 
                     </Grid>
-                    <Grid item>
-                        <Button
-                            variant="outlined"
-                            sx={{ height: '52px', width: '52px', minWidth: '52px', color: 'text.primary', padding: 0 }}
-                        >
-                            <img src={FacebookLogo} alt="Facebook" style={{ height: '100%', width: '100%' }} />
-                        </Button>
-                    </Grid>
+                   
                 </Grid>
             </Box>
         </Container>
