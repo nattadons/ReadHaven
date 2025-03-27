@@ -25,7 +25,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Middleware
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000','https://drive.google.com'], // อนุญาตเฉพาะ frontend นี้
+  origin: [process.env.CLIENT_URL, 'http://localhost:3000','https://drive.google.com'], // อนุญาตเฉพาะ frontend นี้
   credentials: true  // อนุญาตให้ส่ง cookies หรือ Authorization headers
   
 }));
