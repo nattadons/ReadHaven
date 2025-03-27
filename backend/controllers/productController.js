@@ -5,11 +5,23 @@ const fs = require("fs");
 require('dotenv').config(); // โหลดค่าใน .env
 
 // กำหนดค่าสำหรับ Google Drive API
-const KEY_FILE_PATH = path.join(__dirname, "../credentials.json");
+
 const SCOPES = ["https://www.googleapis.com/auth/drive"];
 const auth = new google.auth.GoogleAuth({
-  keyFile: KEY_FILE_PATH,
-  scopes: SCOPES,
+  credentials: {
+    type: process.env.CREDENTIALS_TYPE,
+    project_id: process.env.CREDENTIALS_PROJECT_ID,
+    private_key_id: process.env.CREDENTIALS_PRIVATE_KEY_ID,
+    private_key: process.env.CREDENTIALS_PRIVATE_KEY.replace(/\\n/g, '\n'),
+    client_email: process.env.CREDENTIALS_CLIENT_EMAIL,
+    client_id: process.env.CREDENTIALS_CLIENT_ID,
+    auth_uri: process.env.CREDENTIALS_AUTH_URI,
+    token_uri: process.env.CREDENTIALS_TOKEN_URI,
+    auth_provider_x509_cert_url: process.env.CREDENTIALS_AUTH_PROVIDER_CERT_URL,
+    client_x509_cert_url: process.env.CREDENTIALS_CLIENT_CERT_URL,
+    universe_domain: process.env.CREDENTIALS_UNIVERSE_DOMAIN
+  },
+  scopes: SCOPES
 });
 const FOLDER_ID = process.env.FOLDER_ID; // รหัสโฟลเดอร์ของ Google Drive ที่จะใช้เก็บไฟล์
 
