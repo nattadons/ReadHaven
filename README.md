@@ -1,8 +1,9 @@
-# Book Haven - Online Bookstore
+# Read Haven - Online Bookstore
 
 ## 📚 Project Overview
 
-Book Haven is a full-stack e-commerce web application for buying and selling books, built using modern web technologies.
+Read Haven is a full-stack e-commerce web application for buying and selling books, built using modern web technologies.
+https://boo-k-haven.vercel.app/
 
 ## 🚀 Technologies Used
 
