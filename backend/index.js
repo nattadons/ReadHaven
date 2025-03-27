@@ -25,9 +25,8 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Middleware
 
 
-
 app.use(cors({
-  origin: [process.env.CLIENT_URL], // ระบุ origin โดยตรง
+  origin:'https://boo-k-haven.vercel.app', // ระบุ origin โดยตรง
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
