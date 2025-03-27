@@ -25,13 +25,13 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Middleware
 
 app.use(cors({
-  origin: [process.env.CLIENT_URL || 'https://boo-k-haven.vercel.app', process.env.API_URL,'https://drive.google.com'], // อนุญาตเฉพาะ frontend นี้
-  credentials: true,  // อนุญาตให้ส่ง cookies หรือ Authorization headers
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  
-  allowedHeaders: ['Content-Type', 'Authorization']
-  
+  origin: [process.env.CLIENT_URL || 'https://boo-k-haven.vercel.app', process.env.API_URL, 'https://drive.google.com'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Access-Control-Allow-Origin'],
 }));
+
 
 console.log('CLIENT_URL',process.env.CLIENT_URL);
 // ใช้ cookie-parser
