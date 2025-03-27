@@ -16,7 +16,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import Recommended from '../components/Recommended';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext';
 
 
 const BookDetail = () => {
@@ -48,33 +48,34 @@ const BookDetail = () => {
             setOpenLoginDialog(true);
             return;
         }
-        
-       
-        
+
+
+
         if (action === 'purchase') {
 
 
             const checkoutData = {
                 items: [{
-                    id: book.id,
+                    productId: book._id,
                     name: book.name,
                     price: book.price,
                     quantity: 1,
-                    image_product: book.image_product
+                    image_product: book.image_product,
+                    description: book.detail
                 }],
                 totalAmount: book.price,
                 timestamp: new Date().getTime()
             };
-            
+
             sessionStorage.setItem('checkoutData', JSON.stringify(checkoutData));
             navigate('/payment');
-            
+
         } else if (action === 'cart') {
             try {
                 await axios.post(
                     `${import.meta.env.VITE_API_URL}/cart/add`,
                     {
-                        id: book._id,  
+                        id: book._id,
                         name: book.name,
                         price: book.price,
                         quantity: 1,
@@ -83,8 +84,8 @@ const BookDetail = () => {
                     },
                     { withCredentials: true }
                 );
-                
-               
+
+
             } catch (error) {
                 // Handle error appropriately
                 console.error('Error adding to cart:', error);
@@ -139,18 +140,27 @@ const BookDetail = () => {
                         <Typography variant="h4" component="h1" gutterBottom fontSize={"24px"}>
                             {book.name}
                         </Typography>
-                        <Typography variant="h6" color="text.secondary" gutterBottom>
-                            by {book.author}
-                        </Typography>
+
+                        <Box display={'flex'} justifyContent={'space-between'} alignItems={'center'}>
+                            <Typography variant="h6" color="text.secondary" gutterBottom>
+                                <Typography variant="h6" color="text.secondary" gutterBottom>
+                                    By {book.author ? book.author : 'Not specified'}
+                                </Typography>
+                            </Typography>
+                            <Typography variant="h6" color="text.secondary" gutterBottom>
+                                {book.type ? book.type : ''}
+                            </Typography>
+                        </Box>
+
                         <Typography variant="body1" sx={{ mt: 4 }}>
                             {book.detail}
                         </Typography>
 
                         <Grid container justifyContent="space-between" sx={{ mt: '80px' }}>
                             <Grid item>
-                                <Button 
-                                    variant="contained" 
-                                    size="large" 
+                                <Button
+                                    variant="contained"
+                                    size="large"
                                     onClick={() => handleAction('purchase')}
                                     sx={{
                                         backgroundColor: 'text.primary',
@@ -166,8 +176,8 @@ const BookDetail = () => {
                                 </Button>
                             </Grid>
                             <Grid item>
-                                <Button 
-                                    variant="contained" 
+                                <Button
+                                    variant="contained"
                                     size="large"
                                     onClick={() => handleAction('cart')}
                                     sx={{
@@ -225,8 +235,10 @@ const BookDetail = () => {
                     </DialogContent>
                     <DialogActions>
                         <Button variant="outlined" color='text.primary' onClick={() => setOpenLoginDialog(false)}    >Cancel</Button>
-                        <Button onClick={handleLoginRedirect} variant="contained"  sx={{  backgroundColor: 'text.primary',
-                                        color: 'primary.main'}}>
+                        <Button onClick={handleLoginRedirect} variant="contained" sx={{
+                            backgroundColor: 'text.primary',
+                            color: 'primary.main'
+                        }}>
                             Go to Login
                         </Button>
                     </DialogActions>

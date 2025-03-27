@@ -53,12 +53,12 @@ function Navbar() {
     navigate('/login');
   };
 
-  const handleDialog=() => {
+  const handleDialog = () => {
     setOpenLoginDialog(true)
   };
 
   const handleLogout = async () => {
-    
+
     const success = await logout();
     if (success) {
       navigate('/login');
@@ -259,7 +259,7 @@ function Navbar() {
                   |
                 </Typography>
                 <Button
-                
+
                   onClick={handleDialog}
                   sx={{
                     color: 'text.primary',
@@ -319,7 +319,7 @@ function Navbar() {
           <DialogTitle>Logout</DialogTitle>
           <DialogContent>
             <Typography>
-            Are you sure you want to log out?
+              Are you sure you want to log out?
             </Typography>
           </DialogContent>
           <DialogActions>

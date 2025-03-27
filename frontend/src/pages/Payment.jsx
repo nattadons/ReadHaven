@@ -23,36 +23,47 @@ import {
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { Elements } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+
+import CheckoutForm from './../components/CheckoutForm.jsx';
+const stripePromise = loadStripe(import.meta.env.VITE_PK_LIVE);
+
 
 const Payment = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [loading, setLoading] = useState(true);
-   
+
     const [userData, setUserData] = useState(null);
     const [checkoutData, setCheckoutData] = useState(null);
-    const [paymentMethod, setPaymentMethod] = useState('promptpay');
-    const { isLoggedIn,logout } = useAuth();
+    const [paymentMethod, setPaymentMethod] = useState('online_payment');
+    const { isLoggedIn, logout } = useAuth();
     const [openDialog, setOpenDialog] = useState(false); // สถานะเปิด/ปิด dialog
     const [snackbar, setSnackbar] = useState({
         open: false,
         message: '',
         severity: 'success'
     });
+    const [clientSecret, setClientSecret] = useState("");
+    const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+
+
+
 
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                
+
                 // รอให้ token พร้อมก่อน
                 if (isLoggedIn) {
                     // ดึงข้อมูลผู้ใช้
                     const userResponse = await axios.get(
                         `${import.meta.env.VITE_API_URL}/users/`,
                         {
-                           withCredentials: true,
+                            withCredentials: true,
                         }
                     );
                     setUserData(userResponse.data);
@@ -80,23 +91,23 @@ const Payment = () => {
                 if (err.response) {
                     // เช็ค status code
                     if (err.response.status === 401) {
-    
+
                         setOpenDialog(true);
-                       
-                       
+
+
                     } else {
-                        showSnackbar('Something went wrong, please try again',err);
+                        showSnackbar('Something went wrong, please try again', err);
                         navigate('/cart');
                     }
                 } else {
                     showSnackbar('Network error, please try again', 'error');
                     navigate('/cart');
                 }
-                
-              
 
-                
-                
+
+
+
+
             } finally {
                 setLoading(false);
             }
@@ -107,7 +118,7 @@ const Payment = () => {
 
 
     const handleDialogClose = () => {
-        logout(); 
+        logout();
         navigate('/login'); // นำทางไปหน้า login
         setOpenDialog(false); // ปิด dialog
     };
@@ -122,57 +133,91 @@ const Payment = () => {
     };
 
     const handlePaymentChange = (event) => {
-        setPaymentMethod(event.target.value);
+        const selectedMethod = event.target.value;
+        setPaymentMethod(selectedMethod);
+
+        // Hide checkout form when switching payment methods
+        setShowCheckoutForm(false);
+        // If we have a client secret already but switched to cash, clear it
+        if (selectedMethod === 'cash' && clientSecret) {
+            setClientSecret("");
+        }
     };
 
+    // แก้ไขฟังก์ชัน handleCheckout ในไฟล์ Payment.jsx
     const handleCheckout = async () => {
-        try {
-           
-            if (!isLoggedIn) {
-                navigate('/login');
-                return;
-            }
+        if (paymentMethod === 'cash') {
+            try {
+                // สร้างข้อมูล order สำหรับ cash on delivery
+                console.log("Checkout Data Items:", checkoutData.items);
+                const orderPayload = {
+                    items: checkoutData.items.map(item => ({
+                        product: item.productId,
+                        quantity: item.quantity,
+                        price: item.price
+                    })),
+                    payment_method: "cash",
+                    shipping_address: userData?.address || "Address not provided"
+                };
+                console.log("Order Payload:", orderPayload);
 
-            const orderData = {
+                // ส่งข้อมูลไปสร้าง order
+                const response = await axios.post(
+                    `${import.meta.env.VITE_API_URL}/orders`,
+                    orderPayload,
+                    { withCredentials: true }
+                );
+
+                showSnackbar('Your order has been placed successfully with Cash on Delivery option.', 'success');
+                // นำทางไปยังหน้า complete
+                navigate('/complete', {
+                    state: {
+                        orderData: response.data,
+                        paymentMethod: 'cash'
+                    }
+                });
+            } catch (error) {
+                console.error("Error creating cash order:", error);
+                showSnackbar('Failed to place your order. Please try again.', 'error');
+            }
+            return;
+        }
+
+        // ส่วนของ online payment ยังคงเหมือนเดิม
+        try {
+            console.log("Checkout Data Items:", checkoutData.items);
+            const orderPayload = {
                 items: checkoutData.items.map(item => ({
-                    productId: item.id,
+                    product: item.productId,
                     quantity: item.quantity,
                     price: item.price
                 })),
-                totalAmount: checkoutData.totalAmount,
-                paymentMethod: paymentMethod,
-                userId: userData._id,
-                shippingAddress: userData.address || '',
-                phoneNumber: userData.phone_number || ''
+                payment_method: "online_payment",
+                shipping_address: userData?.address || "Address not provided"
             };
+            console.log("orderpayload:", orderPayload);
 
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/orders`,
-                orderData,
-                {
-                    withCredentials: true,
-                }
-            );
-
-            // ลบข้อมูลทั้งหมดหลังจากสั่งซื้อสำเร็จ
-            sessionStorage.removeItem('checkoutData');
-            localStorage.removeItem('cartItems');
-
-            navigate('/order-success', {
-                state: {
-                    orderId: response.data._id,
-                    totalAmount: orderData.totalAmount
-                }
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/payment/pay`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(orderPayload),
             });
 
-        } catch (err) {
-            if (err.response) {
-                showSnackbar(err.response.data.message, 'error');
-            } else {
-                showSnackbar('Network error, please try again', 'error');
+
+            if (!response.ok) {
+                throw new Error('Payment initialization failed');
+            }
+
+            const data = await response.json();
+            console.log('data')
+            setClientSecret(data.clientSecret);
+            setShowCheckoutForm(true);
+        } catch (error) {
+            showSnackbar('Failed to initialize payment: ' + error.message, 'error');
         }
     };
-}
 
     const handleMyAccount = () => {
         navigate('/myaccount');
@@ -181,15 +226,15 @@ const Payment = () => {
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress />
+                <CircularProgress color='text.primary' size="4rem" />
             </Box>
         );
     }
-     // ถ้ายังไม่มี token ให้แสดง loading
-     if (!isLoggedIn) {
+    // ถ้ายังไม่มี token ให้แสดง loading
+    if (!isLoggedIn) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-                <CircularProgress />
+                <CircularProgress color='text.primary' size="4rem" />
             </Box>
         );
     }
@@ -205,7 +250,7 @@ const Payment = () => {
                 alignItems: 'start',
                 maxWidth: '100%',
             }}>
-               
+
 
                 {/* Address Section */}
                 <Grid container spacing={3}>
@@ -220,7 +265,7 @@ const Payment = () => {
                                     <LocationOnIcon sx={{ mr: 1 }} />
                                     <Typography variant="h6">Address</Typography>
                                 </Box>
-                                <Button 
+                                <Button
                                     onClick={handleMyAccount}
                                     sx={{
                                         backgroundColor: 'text.primary',
@@ -308,15 +353,15 @@ const Payment = () => {
                                         <Paper
                                             elevation={0}
                                             sx={{
-                                                border: paymentMethod === 'promptpay' ? '2px solid #000000' : '1px solid #e0e0e0',
+                                                border: paymentMethod === 'online_payment' ? '2px solid #000000' : '1px solid #e0e0e0',
                                                 borderRadius: 1,
                                                 p: 1,
                                             }}
                                         >
                                             <FormControlLabel
-                                                value="promptpay"
+                                                value="online_payment"
                                                 control={<Radio />}
-                                                label="QR Promptpay"
+                                                label="Online Payment"
                                             />
                                         </Paper>
 
@@ -383,12 +428,24 @@ const Payment = () => {
                                     </Button>
                                 </Box>
                             </Box>
+
+                            {/* Stripe Checkout Form - only shows after clicking checkout with online_payment selected */}
+                            {showCheckoutForm && paymentMethod === 'online_payment' && clientSecret && (
+                                <Box sx={{ p: 3, borderTop: '1px solid #e0e0e0' }}>
+                                    <Typography variant="subtitle1" fontWeight="bold" sx={{ mb: 2 }}>
+                                        Complete your payment
+                                    </Typography>
+                                    <Elements stripe={stripePromise} options={{ clientSecret }}>
+                                        <CheckoutForm />
+                                    </Elements>
+                                </Box>
+                            )}
                         </Paper>
                     </Grid>
                 </Grid>
             </Box>
 
-            
+
             {/* Snackbar section */}
             <Snackbar
                 open={snackbar.open}
@@ -401,27 +458,29 @@ const Payment = () => {
             </Snackbar>
 
 
-             {/* Dialog section */}
-             <Dialog 
-             open={openDialog} onClose={handleDialogClose}
-                    PaperProps={{
-                        sx: {
-                            borderRadius: '16px',
-                            width: '100%',
-                            maxWidth: '400px',
-                            p: 2,
-                            textAlign: 'center',
-                        }
-                    }}
-            
-           >
+            {/* Dialog section */}
+            <Dialog
+                open={openDialog} onClose={handleDialogClose}
+                PaperProps={{
+                    sx: {
+                        borderRadius: '16px',
+                        width: '100%',
+                        maxWidth: '400px',
+                        p: 2,
+                        textAlign: 'center',
+                    }
+                }}
+
+            >
                 <DialogTitle>Session Expired</DialogTitle>
                 <DialogContent>
                     <Typography>You have been logged out due to inactivity. Please log in again.</Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleDialogClose} variant="contained"  sx={{  backgroundColor: 'text.primary',
-                                        color: 'primary.main'}}>
+                    <Button onClick={handleDialogClose} variant="contained" sx={{
+                        backgroundColor: 'text.primary',
+                        color: 'primary.main'
+                    }}>
                         Log In Again
                     </Button>
 

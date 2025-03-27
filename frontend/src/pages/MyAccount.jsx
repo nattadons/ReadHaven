@@ -13,7 +13,9 @@ import {
     DialogActions,
     DialogContent,
     DialogTitle,
-    
+    Tabs,
+    Tab
+
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,7 +23,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import LeafMapApi from '../components/LeafMapApi';
-import MyAccountAdmin from './MyAccountAdmin';
+import MyAccountAdmin from './Admin/MyAccountAdmin';
 import { useAuth } from '../context/AuthContext';
 
 const MyAccount = () => {
@@ -34,7 +36,7 @@ const MyAccount = () => {
         latitude: null,
         longitude: null
     });
-    
+
     // Validation errors
     const [errors, setErrors] = useState({
         name: '',
@@ -54,6 +56,7 @@ const MyAccount = () => {
 
     const { isLoggedIn, logout } = useAuth();
     const navigate = useNavigate();
+    const [tabIndex, setTabIndex] = useState(0); // 0 สำหรับ "My Account", 1 สำหรับ "Order"
 
     useEffect(() => {
         if (isLoggedIn) {
@@ -64,7 +67,7 @@ const MyAccount = () => {
     const fetchUserData = async () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/`, {
-               withCredentials: true,
+                withCredentials: true,
             });
             setUser(prevUser => ({
                 ...prevUser,
@@ -85,14 +88,12 @@ const MyAccount = () => {
     };
 
     const handleDialogClose = () => {
-        logout(); 
+        logout();
         navigate('/login');
         setOpenDialog(false);
     };
-    
-    if (user?.role === 'admin') {
-        return <MyAccountAdmin />;
-    }
+
+
 
     const handleEdit = () => {
         setIsEditing(true);
@@ -195,7 +196,7 @@ const MyAccount = () => {
                 `${import.meta.env.VITE_API_URL}/users/update`,
                 updates,
                 {
-                   withCredentials: true,
+                    withCredentials: true,
                 }
             );
 
@@ -230,7 +231,7 @@ const MyAccount = () => {
 
         return (
             <Box sx={{ width: '100%', mt: 2 }}>
-                <LeafMapApi 
+                <LeafMapApi
                     onLocationUpdate={handleLocationUpdate}
                     initialLocation={{
                         latitude: user.latitude,
@@ -241,19 +242,25 @@ const MyAccount = () => {
         );
     };
 
+
+
+    const handleTabChange = (event, newIndex) => {
+        setTabIndex(newIndex);
+    };
+
     return (
         <Container maxWidth="lg">
-            <Box sx={{ mb: 4, mt: '100px' }}>
-                <Typography
-                    component="span"
-                    sx={{
-                        fontWeight: 'bold',
-                        mr: 3
-                    }}
-                >
-                    My Account
-                </Typography>
+            <Box sx={{ mb: 4, mt: '100px',borderBottom: 1, borderColor: 'divider'  }}>
+          
+
+            <Tabs value={tabIndex} onChange={handleTabChange} aria-label="my-account-tabs">
+                <Tab label="My Account" />
+                {user?.role === 'admin' && <Tab label="Customer Order" onClick={() => navigate('/checkorder')} />}
+                {user?.role === 'user' && <Tab label="Order Tracking" onClick={() => navigate('/tracking')} />}
+            </Tabs>
+              
             </Box>
+           
 
             <Paper
                 elevation={0}
@@ -384,8 +391,8 @@ const MyAccount = () => {
                                     type="email"
                                     disabled={!isEditing || Boolean(user.googleId)}
                                     error={!!errors.email && isEditing && !user.googleId}
-                                    helperText={(isEditing && !user.googleId && errors.email) || 
-                                              (user.googleId && "Email cannot be edited for Google accounts")}
+                                    helperText={(isEditing && !user.googleId && errors.email) ||
+                                        (user.googleId && "Email cannot be edited for Google accounts")}
                                     sx={{
                                         '& .MuiInputBase-input.Mui-disabled': {
                                             bgcolor: 'action.hover',
@@ -406,6 +413,11 @@ const MyAccount = () => {
                 </Box>
             </Paper>
 
+            {/* แสดง UI สำหรับ Admin ถ้าเป็นผู้ใช้ Admin */}
+            {user?.role === 'admin' && (
+                <MyAccountAdmin />
+            )}
+
             {/* Snackbar section */}
             <Snackbar
                 open={snackbar.open}
@@ -416,10 +428,10 @@ const MyAccount = () => {
                     {snackbar.message}
                 </Alert>
             </Snackbar>
-                                    
+
             {/* Dialog section */}
-            <Dialog 
-                open={openDialog} 
+            <Dialog
+                open={openDialog}
                 onClose={handleDialogClose}
                 PaperProps={{
                     sx: {

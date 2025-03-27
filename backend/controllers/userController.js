@@ -8,8 +8,8 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 
 
-// ดึงข้อมูลผู้ใช้ทั้งหมด
-exports.getAllUsers = async (req, res) => {
+// ดึงข้อมูลผู้ใช้ตาม ID
+exports.getUser = async (req, res) => {
   try {
     const userId = req.user.userId;  // ใช้ userId ที่ได้จาก token
 
@@ -24,6 +24,23 @@ exports.getAllUsers = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+// ดึงข้อมูลผู้ใช้ทั้งหมด
+exports.getAllUsers = async (req, res) => {
+  try {
+    const users = await Users.find(); // ดึงข้อมูลผู้ใช้ทั้งหมดจากฐานข้อมูล
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: 'No users found' });
+    }
+
+    res.status(200).json(users); // ส่งข้อมูลผู้ใช้ทั้งหมดกลับ
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 
 // สร้างผู้ใช้ใหม่ (Signup)
 exports.createUser = async (req, res) => {
@@ -76,7 +93,7 @@ exports.loginUser = async (req, res) => {
 
     // สร้าง JWT Token
     const token = jwt.sign(
-      { userId: user._id, email: user.email }, // Payload
+      { userId: user._id, email: user.email}, // Payload
       JWT_SECRET, // Secret Key
       { expiresIn: '7d' } // Token มีอายุ 7 วัน
     );
@@ -94,7 +111,7 @@ exports.loginUser = async (req, res) => {
     res.status(200).json({
       message: 'Login successful!',
      
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, name: user.name, email: user.email, },
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -163,6 +180,7 @@ exports.loginWithGoogle = async (req, res) => {
         name: user.name,
         email: user.email,
         imageUrl: user.imageUrl,
+        
       },
     });
 
@@ -227,18 +245,5 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-// Add to userController.js
-exports.checkAdminRole = async (req, res, next) => {
-  try {
-    const userId = req.user.userId;
-    const user = await Users.findById(userId);
-    
-    if (!user || user.role !== 'admin') {
-      return res.status(403).json({ message: 'Access denied. Admin only.' });
-    }
-    next();
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+
 

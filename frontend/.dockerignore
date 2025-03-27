@@ -1,0 +1,19 @@
+# Node modules (ไม่ต้องการคัดลอก node_modules ใน Docker image)
+node_modules/
+
+# ไฟล์ล็อกของ npm หรือ yarn
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# โฟลเดอร์ build หรือ dist ที่สร้างจากการ build โปรเจกต์
+build/
+dist/
+
+# ไฟล์ของ IDE เช่น VSCode settings
+.vscode/
+
+# ไฟล์การตั้งค่าของระบบ
+.DS_Store
+
+

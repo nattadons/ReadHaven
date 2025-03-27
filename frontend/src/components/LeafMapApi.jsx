@@ -1,10 +1,26 @@
 import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+import L from 'leaflet';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
 import PropTypes from "prop-types";
 
+// Configure default marker icon
+let DefaultIcon = L.icon({
+    iconUrl: icon,
+    shadowUrl: iconShadow,
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41]
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
 const LocationMarker = ({ onLocationUpdate, initialLocation }) => {
+    // Rest of your component code remains the same
     const [position, setPosition] = useState(null);
     const [, setLocationFetched] = useState(false);
     const map = useMap();
@@ -95,6 +111,7 @@ const LeafMapApi = ({ onLocationUpdate, initialLocation }) => {
         </MapContainer>
     );
 };
+
 LocationMarker.propTypes = {
     onLocationUpdate: PropTypes.func,
     initialLocation: PropTypes.shape({
@@ -110,6 +127,5 @@ LeafMapApi.propTypes = {
         longitude: PropTypes.number,
     }),
 };
-
 
 export default LeafMapApi;

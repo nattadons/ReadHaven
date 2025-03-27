@@ -36,7 +36,7 @@ const GoogleLogin = () => {
         );
   
         console.log('User data sent successfully:', serverResponse.data);
-        login(serverResponse.data.user.id);
+        login(); // ล็อกอินผ่าน context
       } catch (error) {
         console.error('Error during login:', error);
       }

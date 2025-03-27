@@ -6,26 +6,35 @@ const userRoutes = require('./routes/userRoutes'); // Import user routes
 const productRoutes = require('./routes/productRoutes');// Import product routes
 const orderRoutes = require('./routes/orderRoutes');// Import order routes
 const cartRoutes = require('./routes/cartRoutes');// Import cart routes
+const paymentRoutes = require('./routes/paymentRoutes');
+
 const JWT_SECRET = process.env.JWT_SECRET;
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 // ใช้ cookie-parser
 const cookieParser = require('cookie-parser');
-// ใช้ helmet ป้องกัร HTTP headers account/iframe
 
 
 
 
-console.log("JWT คือ",JWT_SECRET);  // ทดสอบให้แน่ใจว่าอ่านค่าจาก .env ได้ถูกต้อง
-console.log("GOOGLE_ID คือ",GOOGLE_CLIENT_ID);  
 const app = express();
 
+
+//ปรับการตั้งค่า Express เพื่อรองรับไฟล์ขนาดใหญ่:
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Middleware
 
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'], // อนุญาตเฉพาะ frontend นี้
-  credentials: true  // อนุญาตให้ส่ง cookies หรือ Authorization headers
-  
+  origin:'https://boo-k-haven.vercel.app', // ระบุ origin โดยตรง
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+
+
+console.log('CLIENT_URL',process.env.CLIENT_URL);
 // ใช้ cookie-parser
 app.use(cookieParser());
 
@@ -56,6 +65,8 @@ app.use('/users', userRoutes); // ใช้เส้นทาง /users สำ�
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
 app.use('/cart', cartRoutes);
+app.use('/payment', paymentRoutes);
+
 
 // Start Server
 const PORT = process.env.PORT || 3000;
