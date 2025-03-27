@@ -25,10 +25,15 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Middleware
 
 app.use(cors({
-  origin: [process.env.CLIENT_URL, 'http://localhost:3000','https://drive.google.com'], // อนุญาตเฉพาะ frontend นี้
-  credentials: true  // อนุญาตให้ส่ง cookies หรือ Authorization headers
+  origin: [process.env.CLIENT_URL, process.env.API_URL,'https://drive.google.com'], // อนุญาตเฉพาะ frontend นี้
+  credentials: true,  // อนุญาตให้ส่ง cookies หรือ Authorization headers
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  
+  allowedHeaders: ['Content-Type', 'Authorization']
   
 }));
+
+console.log('CLIENT_URL',process.env.CLIENT_URL);
 // ใช้ cookie-parser
 app.use(cookieParser());
 
